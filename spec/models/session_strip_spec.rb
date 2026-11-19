@@ -41,7 +41,6 @@ RSpec.describe SessionStrip do
     settle(won, "Lands it")
     settle(lost, "Lands it")
 
-    # Won: 200 pool − 10 rake = 190 back on 100 (+90). Lost: −30. Pending: 0.
     expect(described_class.new(user: fan, since: 1.hour.ago).net).to eq(60)
   end
 

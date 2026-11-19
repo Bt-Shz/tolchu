@@ -7,7 +7,6 @@ class Outcome < ApplicationRecord
   validates :label, presence: true, length: { maximum: 40 }
   validates :pool, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
-  # Fraction of the market's pool riding on this outcome (0.0 to 1.0).
   def share_of_pool
     market.total_pool.zero? ? 0.0 : pool.fdiv(market.total_pool)
   end

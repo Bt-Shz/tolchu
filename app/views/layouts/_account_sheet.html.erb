@@ -1,0 +1,29 @@
+<div class="account-sheet" data-controller="sheet">
+  <button type="button" class="account-sheet__handle" data-action="sheet#open" aria-label="Open menu" aria-haspopup="dialog"></button>
+  <dialog class="account-sheet__panel" data-sheet-target="dialog" data-action="click->sheet#backdrop" aria-label="Menu">
+    <div class="account-sheet__body">
+      <button type="button" class="account-sheet__grip" data-action="sheet#close" aria-label="Close menu"></button>
+      <% if Current.user %>
+        <p class="account-sheet__balance">
+          <span id="wallet-balance"><%= Current.user.balance.to_fs(:delimited) %></span><span class="bet-pad__unit" aria-hidden="true">◎</span>
+          <span class="account-sheet__caption">credits · @<%= Current.user.username %></span>
+        </p>
+        <ul class="account-sheet__links" role="list">
+          <li><%= link_to "Feed", root_path %></li>
+          <li><%= link_to "Wallet", wallet_path %></li>
+          <li><%= link_to "Post a clip", new_studio_market_path %></li>
+          <li><%= link_to "Studio", studio_markets_path %></li>
+          <li><%= link_to "How it works", how_it_works_path %></li>
+          <li><%= button_to "Sign out", session_path, method: :delete, class: "account-sheet__signout" %></li>
+        </ul>
+      <% else %>
+        <ul class="account-sheet__links" role="list">
+          <li><%= link_to "Feed", root_path %></li>
+          <li><%= link_to "Sign in", new_session_path %></li>
+          <li><%= link_to "Sign up", new_registration_path %></li>
+          <li><%= link_to "How it works", how_it_works_path %></li>
+        </ul>
+      <% end %>
+    </div>
+  </dialog>
+</div>

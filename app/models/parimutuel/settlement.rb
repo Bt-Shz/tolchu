@@ -1,11 +1,7 @@
 module Parimutuel
-  # Splits a pool of wagers once the winning outcome is known.
-  # Invariant: payouts.values.sum + creator_reward + house_take == total_pool.
   class Settlement
     attr_reader :wagers, :winning_outcome_id, :payouts, :rake, :creator_reward, :house_take, :contest_score
 
-    # outcome_ids lists every outcome in the market (including ones nobody bet on)
-    # so the contest score accounts for the full set of options.
     def initialize(wagers:, winning_outcome_id:, outcome_ids:)
       @wagers = wagers
       @winning_outcome_id = winning_outcome_id

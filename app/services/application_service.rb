@@ -1,12 +1,3 @@
-# Base class for multi-step business operations.
-#
-#   result = Betting::PlaceBet.call(user:, market:, outcome_id:, stake:)
-#   result.success? # => true / false
-#   result.value    # => whatever #perform returned
-#   result.error    # => human-readable message when it failed
-#
-# Subclasses implement #perform and call #fail! to abort. Because fail! raises,
-# calling it inside a transaction block rolls that transaction back.
 class ApplicationService
   class Failure < StandardError; end
 

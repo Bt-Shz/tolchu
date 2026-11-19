@@ -10,7 +10,8 @@ RSpec.describe "Studio markets" do
         freeze_at: "4.5",
         betting_window_minutes: "15",
         description: "Backflip off the ledge",
-        outcomes_attributes: { "0" => { label: "Sticks it" }, "1" => { label: "Wipes out" }, "2" => { label: "" }, "3" => { label: "" } }
+        outcomes_attributes: { "0" => { label: "Sticks it" }, "1" => { label: "Wipes out" }, "2" => { label: "" }, "3" => { label: "" } },
+        sealed_answer: "1"
       }
     }
   end
@@ -96,9 +97,24 @@ RSpec.describe "Studio markets" do
           market = creator.created_markets.sole
           expect(market).to have_attributes(question: "Will she stick the landing?", freeze_at: 4.5, locks_at: 15.minutes.from_now)
           expect(market.outcomes.map(&:label)).to eq([ "Sticks it", "Wipes out" ])
+          expect(market.sealed_winner.label).to eq("Wipes out")
           expect(response).to redirect_to(studio_markets_path)
           expect(flash[:notice]).to eq("Your market is live! Betting closes 15 minutes from now.")
         end
+      end
+
+      it "seals the answer by field number, even when an earlier field was left blank" do
+        params = market_params.deep_merge(market: { outcomes_attributes: { "0" => { label: "" }, "2" => { label: "Bails" } }, sealed_answer: "2" })
+        post studio_markets_path, params: params
+
+        expect(creator.created_markets.sole.sealed_winner.label).to eq("Bails")
+      end
+
+      it "requires the creator to seal the answer" do
+        params = market_params.deep_merge(market: { sealed_answer: "" })
+
+        expect { post studio_markets_path, params: }.not_to change(Market, :count)
+        expect(response.body).to include("Pick the outcome that actually happens")
       end
 
       it "re-renders the form with errors" do

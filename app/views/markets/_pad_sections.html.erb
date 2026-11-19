@@ -1,7 +1,4 @@
 <%# locals: (market:, selectable:, picked_id: nil) %>
-<%# One section per outcome, laid out by outcome count (halves, top band + halves, quadrants).
-    Each section shows the label, the live multiplier, its share of the pool and, while you can
-    still bet, what the current stake would win. %>
 <% outcomes = market.outcomes.to_a %>
 <ul class="bet-pad__sections" role="list">
   <% outcomes.zip(pad_directions(outcomes.size)).each do |outcome, direction| %>
@@ -10,7 +7,7 @@
                data: (selectable ? { bet_pad_target: "section", dir: direction } : {}) do %>
       <% if selectable %>
         <label class="outcome__hit">
-          <%= radio_button_tag :outcome_id, outcome.id, false, id: dom_id(outcome, :pick), class: "outcome__radio visually-hidden",
+          <%= radio_button_tag :outcome_id, outcome.id, picked_id == outcome.id, id: dom_id(outcome, :pick), class: "outcome__radio visually-hidden",
                 required: true, data: { action: "change->bet-pad#render" } %>
           <span class="outcome__label"><%= outcome.label %></span>
         </label>

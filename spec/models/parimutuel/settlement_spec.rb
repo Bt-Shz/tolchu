@@ -26,7 +26,6 @@ RSpec.describe Parimutuel::Settlement do
     end
 
     it "gives rounding dust to the house" do
-      # rake 10 + dust 1 - creator 2
       expect(settlement.house_take).to eq(9)
     end
 
@@ -75,7 +74,6 @@ RSpec.describe Parimutuel::Settlement do
   it "settles multi-outcome markets where several outcomes lose" do
     settlement = settle([ wager(1, :a, 30), wager(2, :b, 30), wager(3, :c, 40) ], winner: :b, outcomes: %i[a b c])
 
-    # 100 pool, rake 5, 95 to the only winner
     expect(settlement.payouts).to eq(1 => 0, 2 => 95, 3 => 0)
     expect(settlement.contest_score).to eq(Rational(9, 10))
     expect(settlement.creator_reward).to eq(2)

@@ -47,12 +47,10 @@ RSpec.describe Parimutuel do
 
   describe ".projected_multiplier" do
     it "returns the payout per credit if the outcome wins" do
-      # 200 pool, 100 on this outcome: 190 distributable / 100 = 1.9x
       expect(described_class.projected_multiplier(outcome_pool: 100, total_pool: 200)).to eq(Rational(19, 10))
     end
 
     it "includes a prospective stake in both the outcome and total pools" do
-      # 100 + 100 on this outcome, 300 total: rake 15, 285 / 200
       expect(described_class.projected_multiplier(outcome_pool: 100, total_pool: 200, stake: 100)).to eq(Rational(285, 200))
     end
 

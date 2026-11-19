@@ -1,7 +1,5 @@
 module Markets
-  # Voids a market that hasn't been settled yet and refunds every stake in full.
   class Cancel < ApplicationService
-    # `now` is for tests; by default the clock is read after the market row lock is held.
     def initialize(market:, now: nil)
       @market = market
       @now = now

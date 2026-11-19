@@ -1,22 +1,21 @@
 import { Controller } from "@hotwired/stimulus"
+import { Turbo } from "@hotwired/turbo-rails"
 
-// Ticks down to a market's lock time. When it hits zero the card switches to
-// "Betting closed" and the bet button is disabled. The server enforces the lock
-// regardless; this just keeps the UI honest. A pending bet's review screen shows
-// the same countdown as a bare clock in the bet button's slot.
 export default class extends Controller {
-  static targets = ["label", "submit", "clock"]
-  static values = { locksAt: String, live: Boolean }
+  static targets = ["label", "submit", "clock", "ring"]
+  static values = { locksAt: String, opensAt: String, live: Boolean, refreshUrl: String }
 
   connect() {
     if (!this.liveValue) return
     this.deadline = new Date(this.locksAtValue).getTime()
+    this.window = this.deadline - new Date(this.opensAtValue).getTime()
     this.tick()
     this.timer = setInterval(() => this.tick(), 1000)
   }
 
   disconnect() {
     clearInterval(this.timer)
+    clearTimeout(this.refreshTimer)
   }
 
   tick() {
@@ -24,20 +23,38 @@ export default class extends Controller {
     if (remaining <= 0) return this.lock()
     if (this.hasLabelTarget) this.labelTarget.textContent = `Locks in ${this.format(remaining)}`
     if (this.hasClockTarget) this.clockTarget.textContent = this.clock(remaining)
+    this.drainRings(remaining)
   }
 
   lock() {
     clearInterval(this.timer)
     if (this.hasLabelTarget) this.labelTarget.textContent = "Betting closed"
-    if (this.hasClockTarget) this.clockTarget.textContent = "locked"
+    if (this.hasClockTarget) this.clockTarget.textContent = "0:00"
+    this.drainRings(0)
     this.element.classList.add("is-locked")
     this.submitTargets.forEach((button) => {
       button.disabled = true
       button.value = "Betting closed"
     })
+    if (this.hasRefreshUrlValue) this.refreshTimer = setTimeout(() => this.refresh(), 800)
   }
 
-  // m:ss, or h:mm:ss past an hour (same as ApplicationHelper#lock_clock).
+  drainRings(remaining) {
+    const left = this.window > 0 ? Math.min(Math.max(remaining / this.window, 0), 1) : 0
+    this.ringTargets.forEach((ring) => {
+      ring.querySelector(".bet-pad__ring-fill").style.strokeDashoffset = 100 * (1 - left)
+      ring.classList.toggle("is-ending", remaining <= 10_000)
+    })
+  }
+
+  async refresh() {
+    try {
+      const response = await fetch(this.refreshUrlValue, { headers: { Accept: "text/vnd.turbo-stream.html" } })
+      if (response.ok) Turbo.renderStreamMessage(await response.text())
+    } catch {
+    }
+  }
+
   clock(ms) {
     const total = Math.ceil(ms / 1000)
     const hours = Math.floor(total / 3600)

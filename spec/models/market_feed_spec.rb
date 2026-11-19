@@ -21,6 +21,16 @@ RSpec.describe MarketFeed do
     expect(markets).not_to include(cancelled)
   end
 
+  it "puts a focused market first, even one the feed would leave out" do
+    open_market = create(:market)
+    cancelled = create(:market)
+    Markets::Cancel.call(market: cancelled)
+
+    expect(described_class.new(focus_id: cancelled.id).markets).to eq([ cancelled, open_market ])
+    expect(described_class.new(focus_id: open_market.id).markets.first).to eq(open_market)
+    expect(described_class.new(focus_id: 0).markets).to eq([ open_market ])
+  end
+
   it "only shows the most recent results" do
     stub_const("MarketFeed::RECENT_RESULTS_LIMIT", 1)
     2.times do

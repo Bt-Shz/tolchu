@@ -7,7 +7,8 @@ Rails.application.routes.draw do
   get "sign_in", to: "sessions#new"
 
   resources :markets, only: %i[index show] do
-    resources :bets, only: :create
+    get :card, on: :member
+    resources :bets, only: %i[create update]
   end
   resource :wallet, only: :show
 

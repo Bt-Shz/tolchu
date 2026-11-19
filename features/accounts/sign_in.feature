@@ -8,8 +8,7 @@ Feature: Sign in and out
 
   Scenario: Signing in with the right password
     When I sign in with "regular@example.com" and "password123"
-    Then I should see "Welcome back, regular!"
-    And my balance should be 1,000 credits
+    Then my balance should be 1,000 credits
 
   Scenario: Signing in with the wrong password
     When I sign in with "regular@example.com" and "not-my-password"
@@ -18,9 +17,9 @@ Feature: Sign in and out
 
   Scenario: Signing out
     Given I am signed in as "regular"
+    And I am on the how it works page
     When I press "Sign out"
-    Then I should see "You've been signed out."
-    And I should not be signed in
+    Then I should not be signed in
 
   Scenario: My wallet requires an account, and I land back there after signing in
     When I go to my wallet

@@ -4,6 +4,8 @@
 #   heroku run bin/rails db:seed   # production
 #
 # Safe to re-run: it does nothing if the demo creators already exist.
+# Live markets lock 10–30 minutes after seeding, like real microbets, and settle themselves
+# on their sealed answer the moment they lock. To get fresh live markets, run `bin/rails db:reset`.
 # Everything goes through the real services (User.register, Betting::PlaceBet,
 # Markets::Lock/Resolve), so balances, pools, and the ledger stay consistent.
 #
@@ -28,10 +30,10 @@ def clip(id)
   "https://assets.mixkit.co/videos/#{id}/#{id}-720.mp4"
 end
 
-def post_market(creator:, question:, clip_id:, freeze_at:, outcomes:, closes_in:, description: nil)
+def post_market(creator:, question:, clip_id:, freeze_at:, outcomes:, closes_in:, description: nil, answer: nil)
   creator.created_markets.create!(
     question:, description:, video_url: clip(clip_id), freeze_at:, locks_at: closes_in.from_now,
-    outcomes_attributes: outcomes.map { |label| { label: } }
+    outcomes_attributes: outcomes.map { |label| { label: } }, sealed_answer_label: answer
   )
 end
 
@@ -58,7 +60,7 @@ ActiveRecord::Base.transaction do
   # Answer: Buckets (the pull-up drops clean through the net).
   jumper = post_market(
     creator: court_vision, question: "Will #67's pull-up jumper drop?", clip_id: 44468, freeze_at: 3.1,
-    outcomes: [ "Buckets", "Brick", "Blocked" ], closes_in: 21.days,
+    outcomes: [ "Buckets", "Brick", "Blocked" ], closes_in: 10.minutes, answer: "Buckets",
     description: "One-on-one, defender closing out hard."
   )
   bet!(alice, jumper, "Buckets", 60)
@@ -70,7 +72,7 @@ ActiveRecord::Base.transaction do
   # Answer: Sticks the landing.
   backflip = post_market(
     creator: stunt_lab, question: "Will he stick the standing backflip?", clip_id: 41010, freeze_at: 3.2,
-    outcomes: [ "Sticks the landing", "Eats dirt" ], closes_in: 25.days,
+    outcomes: [ "Sticks the landing", "Eats dirt" ], closes_in: 15.minutes, answer: "Sticks the landing",
     description: "No mat, no spotter, sandy ground."
   )
   bet!(erin, backflip, "Eats dirt", 50)
@@ -80,7 +82,7 @@ ActiveRecord::Base.transaction do
   # Answer: Lands it.
   board_flip = post_market(
     creator: stunt_lab, question: "Does he land the board flip?", clip_id: 34382, freeze_at: 1.0,
-    outcomes: [ "Lands it", "Bails" ], closes_in: 28.days
+    outcomes: [ "Lands it", "Bails" ], closes_in: 20.minutes, answer: "Lands it"
   )
   bet!(alice, board_flip, "Bails", 20)
   bet!(dan, board_flip, "Lands it", 45)
@@ -88,7 +90,7 @@ ActiveRecord::Base.transaction do
   # Answer: Balances it on his head.
   header = post_market(
     creator: stunt_lab, question: "Keepy-uppy: what happens to the ball?", clip_id: 2923, freeze_at: 8.0,
-    outcomes: [ "Balances it on his head", "Drops it", "Keeps juggling" ], closes_in: 30.days
+    outcomes: [ "Balances it on his head", "Drops it", "Keeps juggling" ], closes_in: 30.minutes, answer: "Balances it on his head"
   )
   bet!(bob, header, "Drops it", 30)
   bet!(erin, header, "Keeps juggling", 20)

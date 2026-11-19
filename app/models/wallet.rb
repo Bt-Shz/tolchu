@@ -1,5 +1,3 @@
-# The only way credits move. Each movement locks the user's row, updates the
-# cached balance, and appends a LedgerEntry, all in the caller's transaction.
 class Wallet
   class InsufficientCredits < StandardError; end
 

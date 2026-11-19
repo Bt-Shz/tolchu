@@ -1,11 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Plays a market's clip. While the market is undecided, playback stops on the
-// freeze frame (the instant before the action) so viewers predict with full
-// context but never see the result early. Once settled, the whole clip plays.
-//
-// Clips autoplay muted when at least 60% of the card is on screen and pause
-// when scrolled away, like a short-video feed.
 export default class extends Controller {
   static targets = ["video", "soundButton"]
   static values = { freezeAt: Number, revealed: Boolean }
@@ -28,7 +22,7 @@ export default class extends Controller {
 
   play() {
     if (this.isFrozen) return
-    this.videoTarget.play().catch(() => {}) // Autoplay can be refused; the replay button still works.
+    this.videoTarget.play().catch(() => {})
   }
 
   pause() {
@@ -47,7 +41,6 @@ export default class extends Controller {
     this.soundButtonTarget.setAttribute("aria-label", this.videoTarget.muted ? "Unmute clip" : "Mute clip")
   }
 
-  // Fallback check on timeupdate/seeking for browsers without requestVideoFrameCallback.
   enforceFreeze() {
     if (this.revealedValue || this.freezeAtValue <= 0) return
     if (this.videoTarget.currentTime >= this.freezeAtValue) this.freeze()
@@ -57,7 +50,6 @@ export default class extends Controller {
     if (this.revealedValue) this.element.classList.add("is-ended")
   }
 
-  // Frame-accurate freeze where supported, so the action never leaks past the freeze point.
   watchFrames() {
     const video = this.videoTarget
     if (!video.requestVideoFrameCallback) return

@@ -1,6 +1,4 @@
 <%# locals: (market:, viewer_bet: nil, context: "feed") %>
-<%# Three zones, top to bottom: the clip with its prompt, then the 150 px bet pad.
-    Once the viewer has bet, the card becomes a review screen framed in the bet's state color. %>
 <% phase = market.phase %>
 <%= tag.article id: dom_id(market),
       class: [ "clip-card", "clip-card--#{phase}", ("clip-card--review clip-card--#{viewer_bet.status}" if viewer_bet) ],
@@ -9,17 +7,15 @@
         clip_freeze_at_value: market.freeze_at.to_f,
         clip_revealed_value: phase == :resolved,
         countdown_locks_at_value: market.locks_at.iso8601,
-        countdown_live_value: phase == :open
+        countdown_live_value: phase == :open,
+        countdown_opens_at_value: market.created_at.iso8601,
+        countdown_refresh_url_value: card_market_path(market, context:)
       } do %>
   <div class="clip-card__media">
     <video class="clip-card__video" src="<%= market.video_url %>" muted playsinline preload="metadata"
            data-clip-target="video"
            data-action="timeupdate->clip#enforceFreeze seeking->clip#enforceFreeze ended->clip#ended"
            aria-label="Clip for: <%= market.question %>"></video>
-    <div class="clip-card__hud">
-      <%= phase_badge(market) %>
-      <span class="clip-card__countdown" data-countdown-target="label"><%= lock_status_text(market) %></span>
-    </div>
     <h2 class="clip-card__question"><%= link_to market.question, market_path(market) %></h2>
     <div class="clip-card__caption">
       <p class="clip-card__byline">@<%= market.creator.username %> asks</p>
@@ -34,4 +30,5 @@
   </div>
 
   <%= render "markets/bet_pad", market:, viewer_bet:, context:, phase: %>
+  <%= render "markets/bet_hint", market:, message: (flash[:bet_error] if flash[:bet_error_market_id] == market.id) %>
 <% end %>

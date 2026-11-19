@@ -1,6 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Dismissible flash message that also fades out on its own after a few seconds.
 export default class extends Controller {
   connect() {
     this.timeout = setTimeout(() => this.dismiss(), 6000)

@@ -75,8 +75,16 @@ RSpec.describe ApplicationHelper do
       place_bet(user: create(:user), market:, outcome: "Lands it", stake: 70)
       place_bet(user: create(:user), market:, outcome: "Bails", stake: 30)
 
-      # 10 more on Bails: pool 110, rake 5, so 105 × 10 / 40 = 26.25.
       expect(helper.projected_payout(market.reload, market.outcomes.find_by!(label: "Bails"), 10)).to eq(26)
+    end
+
+    it "measures how much of the betting window is left" do
+      market = build(:market, created_at: Time.zone.local(2026, 11, 19, 12, 0, 0), locks_at: Time.zone.local(2026, 11, 19, 12, 10, 0))
+
+      expect(helper.lock_progress(market, now: market.created_at)).to eq(1.0)
+      expect(helper.lock_progress(market, now: market.created_at + 150.seconds)).to eq(0.75)
+      expect(helper.lock_progress(market, now: market.locks_at + 1.second)).to eq(0.0)
+      expect(helper.lock_progress(build(:market, created_at: market.locks_at, locks_at: market.locks_at))).to eq(0.0)
     end
 
     it "shows the time left before the lock as a clock" do

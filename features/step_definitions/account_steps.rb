@@ -31,13 +31,15 @@ When("I sign in with {string} and {string} on this page") do |email, password|
   submit_sign_in(email, password)
 end
 
-When("I follow my balance") do
-  find(".balance-pill").click
-end
-
 Then("my balance should be {credits} credits") do |amount|
-  visit root_path unless page.has_css?("#wallet-balance")
-  expect(page).to have_css("#wallet-balance", exact_text: amount.to_fs(:delimited))
+  if page.has_css?("#wallet-balance")
+    expect(page).to have_css("#wallet-balance", exact_text: amount.to_fs(:delimited))
+  else
+    previous = page.current_url
+    visit wallet_path
+    expect(page).to have_css("#wallet-balance", exact_text: amount.to_fs(:delimited))
+    visit previous
+  end
 end
 
 Then("I should not be signed in") do

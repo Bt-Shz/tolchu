@@ -10,10 +10,8 @@ FactoryBot.define do
       outcome_labels { [ "Lands it", "Bails" ] }
     end
 
-    # Built (not created) so the market validates and saves them together via autosave.
     outcomes { outcome_labels.map { |label| association(:outcome, strategy: :build, label:, market: instance) } }
 
-    # Betting closed by the clock, but nobody has persisted the "locked" status yet.
     trait :expired do
       after(:create) { |market| market.update_columns(locks_at: 1.minute.ago) }
     end

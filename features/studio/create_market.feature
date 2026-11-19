@@ -16,6 +16,7 @@ Feature: Post a market from a clip
       | Outcome 1                    | Sticks it                        |
       | Outcome 2                    | Wipes out                        |
       | Outcome 3                    | Bails before takeoff             |
+    And I select "Outcome 1" from "What actually happens?"
     And I select "15 minutes" from "Betting window"
     And I press "Publish market"
     Then I should see "Your market is live! Betting closes 15 minutes from now."

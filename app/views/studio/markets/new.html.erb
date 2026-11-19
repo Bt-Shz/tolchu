@@ -43,6 +43,14 @@
     </fieldset>
 
     <div class="field">
+      <%= label_tag "market_sealed_answer", "What actually happens?" %>
+      <%= select_tag "market[sealed_answer]",
+            options_for_select((1..Market::MAX_OUTCOMES).map { |n| [ "Outcome #{n}", n - 1 ] }, params.dig(:market, :sealed_answer)),
+            id: "market_sealed_answer", include_blank: "Pick the outcome you filmed", required: true %>
+      <p class="hint">Sealed when you publish and hidden from bettors. The market settles itself on this answer the moment betting locks.</p>
+    </div>
+
+    <div class="field">
       <%= form.label :betting_window_minutes, "Betting window" %>
       <%= form.select :betting_window_minutes, Market::BETTING_WINDOWS %>
       <p class="hint">Betting locks automatically when the window ends. You can also lock it early from the studio.</p>

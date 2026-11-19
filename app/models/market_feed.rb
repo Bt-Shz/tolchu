@@ -1,22 +1,24 @@
-# The home feed: markets you can still bet on (closing soonest first), then
-# markets waiting for a result, then the most recent results. Cancelled markets
-# are left out.
 class MarketFeed
   RECENT_RESULTS_LIMIT = 12
 
-  attr_reader :viewer, :now
+  attr_reader :viewer, :now, :focus_id
 
-  def initialize(viewer: nil, now: Time.current)
+  def initialize(viewer: nil, now: Time.current, focus_id: nil)
     @viewer = viewer
     @now = now
+    @focus_id = focus_id
   end
 
   def markets
-    @markets ||= [
-      base.accepting_bets(now).order(:locks_at, :id),
-      base.awaiting_result(now).order(locks_at: :desc, id: :desc),
-      base.resolved.order(resolved_at: :desc, id: :desc).limit(RECENT_RESULTS_LIMIT)
-    ].flat_map(&:to_a)
+    @markets ||= begin
+      feed = [
+        base.accepting_bets(now).order(:locks_at, :id),
+        base.awaiting_result(now).order(locks_at: :desc, id: :desc),
+        base.resolved.order(resolved_at: :desc, id: :desc).limit(RECENT_RESULTS_LIMIT)
+      ].flat_map(&:to_a)
+      focused = focus_id && (feed.find { |market| market.id == focus_id } || base.find_by(id: focus_id))
+      focused ? [ focused, *feed.excluding(focused) ] : feed
+    end
   end
 
   def bet_for(market)

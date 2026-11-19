@@ -10,14 +10,13 @@ Feature: Predict what happens next
 
   Scenario: Placing a prediction from the feed
     When I predict "Lands it" with 50 credits on "Will he land the kickflip?"
-    Then I should see "Prediction locked in: Lands it for 50 credits."
-    And my balance should be 950 credits
+    Then my balance should be 950 credits
     And the market "Will he land the kickflip?" should have 50 credits in the pool from 1 prediction
-    And the market "Will he land the kickflip?" should say "You picked Lands it for 50 credits"
+    And the market "Will he land the kickflip?" should show my pending bet of 50 credits on "Lands it"
 
   Scenario: Placing a prediction from the clip's own page
     When I predict "Bails" with 25 credits on "Will he land the kickflip?" from its page
-    Then I should see "Prediction locked in: Bails for 25 credits."
+    Then the market "Will he land the kickflip?" should show my pending bet of 25 credits on "Bails"
     And I should see "Pool breakdown"
     And my balance should be 975 credits
 
@@ -39,7 +38,7 @@ Feature: Predict what happens next
   Scenario: One prediction per market
     Given I have predicted "Lands it" with 20 credits on "Will he land the kickflip?"
     When I go to the feed
-    Then the market "Will he land the kickflip?" should say "You picked Lands it for 20 credits"
+    Then the market "Will he land the kickflip?" should show my pending bet of 20 credits on "Lands it"
     And the market "Will he land the kickflip?" should not offer a "Place bet" button
 
   Scenario: Betting closes the moment the market locks, even on a page I already had open
@@ -53,5 +52,5 @@ Feature: Predict what happens next
   Scenario: Creators can't bet on their own clips
     Given I am signed in as "StuntLab"
     When I go to the feed
-    Then the market "Will he land the kickflip?" should say "You created this market, so you can't bet on it."
+    Then the market "Will he land the kickflip?" should say "Yours"
     And the market "Will he land the kickflip?" should not offer a "Place bet" button

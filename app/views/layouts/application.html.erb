@@ -18,14 +18,15 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
   <body class="<%= yield(:body_class) %>">
-    <%= render "layouts/nav" %>
-    <div id="flash" class="flash-stack" aria-live="polite"><%= render "layouts/flash" %></div>
+    <% unless content_for?(:immersive) %>
+      <div id="flash" class="flash-stack" aria-live="polite"><%= render "layouts/flash" %></div>
+    <% end %>
     <main id="main"><%= yield %></main>
+    <%= render "layouts/account_sheet" %>
   </body>
 </html>

@@ -27,8 +27,8 @@ Feature: Track my credits and predictions
     And my activity should include "Refund for “Will he land the kickflip?”" for +40 credits
     And I should see my prediction on "Will he land the kickflip?" marked "Refunded"
 
-  Scenario: Getting to my wallet from the balance in the navigation
-    Given I am on the feed
-    When I follow my balance
+  Scenario: Getting to my wallet from the menu
+    Given I am on the how it works page
+    When I follow "Wallet"
     Then I should be on my wallet
     And I should see "No predictions yet."

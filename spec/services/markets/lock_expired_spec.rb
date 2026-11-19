@@ -22,6 +22,6 @@ RSpec.describe "markets:lock_expired rake task" do
   it "locks expired markets and reports how many" do
     create(:market, :expired)
 
-    expect { Rake::Task["markets:lock_expired"].execute }.to output("Locked 1 expired market.\n").to_stdout
+    expect { Rake::Task["markets:lock_expired"].execute }.to output("Locked 1 expired market.\nSettled 0 sealed markets.\n").to_stdout
   end
 end
