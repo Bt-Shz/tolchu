@@ -1,5 +1,7 @@
 <% content_for :body_class, "is-feed" %>
 
+<%= render "markets/session_strip" %>
+
 <div class="feed">
   <% if @feed.markets.any? %>
     <% @feed.markets.each do |market| %>

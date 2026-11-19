@@ -5,7 +5,8 @@ class Bet < ApplicationRecord
   MIN_STAKE = 1
   # Hard per-user, per-market cap so no single bettor can dominate (or manipulate) a pool.
   MAX_STAKE = 100
-  QUICK_STAKES = [ 10, 25, 50, 100 ].freeze
+  # Where the bet pad's stake starts on every card.
+  DEFAULT_STAKE = 10
 
   belongs_to :user
   belongs_to :market, counter_cache: true

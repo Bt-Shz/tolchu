@@ -2,30 +2,65 @@
  * Tolchu styles. Plain CSS served by Propshaft, so there's no build step.
  * Every file in app/assets/stylesheets is included by `stylesheet_link_tag :app`.
  *
- * Sections: tokens · base · topbar · buttons · flash · feed & clip card · outcomes & bet form
+ * Sections: tokens · base · topbar · buttons · flash · feed & clip card · bet pad
  *           · pages · forms · studio · wallet · prose · utilities
  */
 
 /* ---------- tokens ---------- */
+/* Warm neutral surfaces with one blue accent, light by default and dark when the system asks.
+   The --state-* colors are the bet states everywhere: tiles, review borders, glows. */
 :root {
-  --bg: #0b0b12;
-  --surface: #15151f;
-  --surface-2: #1e1e2b;
-  --border: #2a2a3a;
-  --text: #f4f4f8;
-  --muted: #a1a1b5;
-  --accent: #8b5cf6;
-  --accent-2: #22d3ee;
+  --bg: #f1efe8;
+  --surface: #ffffff;
+  --surface-2: #f1efe8;
+  --border: rgb(0 0 0 / 0.14);
+  --text: #2c2c2a;
+  --muted: #5f5e5a;
+  --faint: #888780;
+  --accent: #185fa5;
+  --accent-2: #185fa5;
   --accent-ink: #ffffff;
-  --win: #34d399;
-  --loss: #fb7185;
-  --pending: #fbbf24;
+  --accent-soft: #e6f1fb;
+  --accent-soft-ink: #185fa5;
+  --minus: #c93a39;
+  --minus-soft: #fcebeb;
+  --minus-soft-ink: #a32d2d;
+  --win: #3b6d11;
+  --loss: #a32d2d;
+  --pending: #854f0b;
+  --state-pending: #ef9f27;
+  --state-lost: #e24b4a;
+  --state-won: #639922;
+  --media: #2c2c2a;
   --radius: 14px;
   --radius-sm: 10px;
   --topbar-h: 56px;
-  --shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+  --strip-h: 36px;
+  --shadow: 0 10px 30px rgb(0 0 0 / 0.12);
   --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  color-scheme: dark;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1f1f1d;
+    --surface: #2a2a28;
+    --surface-2: #1f1f1d;
+    --border: rgb(255 255 255 / 0.14);
+    --text: #f1efe8;
+    --muted: #b4b2a9;
+    --accent: #378add;
+    --accent-2: #85b7eb;
+    --accent-soft: #0c447c;
+    --accent-soft-ink: #b5d4f4;
+    --minus: #e24b4a;
+    --minus-soft: #5a1d1d;
+    --minus-soft-ink: #f09595;
+    --win: #97c459;
+    --loss: #f09595;
+    --pending: #fac775;
+    --shadow: 0 10px 30px rgb(0 0 0 / 0.4);
+    color-scheme: dark;
+  }
 }
 
 /* ---------- base ---------- */
@@ -59,7 +94,7 @@ img, video { max-width: 100%; display: block; }
   height: var(--topbar-h);
   display: flex; align-items: center; gap: 1rem;
   padding: 0 1rem;
-  background: rgb(11 11 18 / 0.92);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
 }
@@ -67,7 +102,7 @@ img, video { max-width: 100%; display: block; }
 .brand:hover { text-decoration: none; }
 .brand__mark {
   display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 8px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2)); font-size: 0.8rem;
+  background: var(--accent); color: var(--accent-ink); font-size: 0.8rem;
 }
 .topbar__links { display: flex; gap: 0.25rem; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
 .topbar__links::-webkit-scrollbar { display: none; }
@@ -102,8 +137,8 @@ img, video { max-width: 100%; display: block; }
 .btn:hover { text-decoration: none; }
 .btn:active { transform: scale(0.98); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn--primary { background: linear-gradient(135deg, var(--accent), #6d28d9); color: var(--accent-ink); }
-.btn--primary:hover { background: linear-gradient(135deg, #9b74f8, var(--accent)); }
+.btn--primary { background: var(--accent); color: var(--accent-ink); }
+.btn--primary:hover { filter: brightness(1.08); }
 .btn--ghost { background: transparent; color: var(--text); border-color: var(--border); }
 .btn--ghost:hover { background: var(--surface-2); }
 .btn--small { padding: 0.4rem 0.8rem; font-size: 0.85rem; }
@@ -124,70 +159,109 @@ img, video { max-width: 100%; display: block; }
   background: var(--surface-2); border: 1px solid var(--border); font-weight: 600;
   animation: flash-in 0.2s ease-out; transition: opacity 0.25s ease, transform 0.25s ease;
 }
-.flash--notice { border-color: rgb(52 211 153 / 0.5); }
-.flash--alert { border-color: rgb(251 113 133 / 0.6); }
+.flash--notice { border-color: color-mix(in srgb, var(--state-won) 60%, transparent); }
+.flash--alert { border-color: color-mix(in srgb, var(--state-lost) 60%, transparent); }
 .flash.is-leaving { opacity: 0; transform: translateY(-6px); }
 .flash__close { background: none; border: 0; color: var(--muted); font-size: 1.25rem; cursor: pointer; line-height: 1; }
 @keyframes flash-in { from { opacity: 0; transform: translateY(-6px); } }
 
 /* ---------- feed & clip card ---------- */
+/* One card per screen: the clip (media zone) on top, the 150 px bet pad below,
+   and the session strip pinned above the feed. */
+.session-strip {
+  height: var(--strip-h); max-width: 480px; margin: 0 auto; padding: 0 0.85rem;
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.8rem; color: var(--muted); white-space: nowrap;
+}
+.session-strip__label { flex: none; }
+.session-strip__tiles {
+  list-style: none; margin: 0; padding: 3px; flex: 1; min-width: 0;
+  display: flex; flex-direction: row-reverse; gap: 2px;
+  overflow-x: auto; scrollbar-width: none;
+  /* Older tiles fade out at the left edge. */
+  mask-image: linear-gradient(to right, transparent, #000 28px);
+}
+.session-strip__tiles::-webkit-scrollbar { display: none; }
+.session-strip__tiles li { flex: none; }
+.session-tile { display: block; width: 6px; height: 10px; border-radius: 2px; background: var(--state-pending); }
+.session-tile--won { background: var(--state-won); }
+.session-tile--lost { background: var(--state-lost); }
+.session-tile--refunded { background: var(--faint); }
+.session-tile:focus-visible { outline: 1.5px solid var(--text); outline-offset: 1px; }
+.session-strip__empty { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--faint); }
+.session-strip__net { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text); }
+
 .feed {
-  height: calc(100dvh - var(--topbar-h));
+  height: calc(100dvh - var(--topbar-h) - var(--strip-h));
   overflow-y: auto;
   scroll-snap-type: y mandatory;
   overscroll-behavior: contain;
 }
 .clip-card {
   scroll-snap-align: start;
-  height: calc(100dvh - var(--topbar-h));
+  height: calc(100dvh - var(--topbar-h) - var(--strip-h));
   max-width: 480px;
   margin: 0 auto;
-  display: flex; flex-direction: column;
+  padding: 8px;
+  display: flex; flex-direction: column; gap: 8px;
   background: var(--surface);
-  border-left: 1px solid var(--border);
-  border-right: 1px solid var(--border);
+  border: 3px solid transparent;
+  border-radius: 22px;
 }
 .clip-card__media {
-  position: relative; flex: 0 0 auto; height: 46%;
-  background: radial-gradient(circle at 30% 20%, #2b2350, #0b0b12 70%);
-  overflow: hidden;
+  position: relative; flex: 1 1 auto; min-height: 0;
+  border-radius: 12px; background: var(--media); overflow: hidden;
 }
-.clip-card__video { width: 100%; height: 100%; object-fit: cover; }
-.clip-card__prompt {
-  position: absolute; inset: auto 0 1rem 0; margin: 0 auto; width: max-content;
-  padding: 0.45rem 0.9rem; border-radius: 999px;
-  background: rgb(11 11 18 / 0.75); border: 1px solid var(--accent);
-  font-weight: 800; letter-spacing: 0.01em;
-  opacity: 0; transform: translateY(6px); transition: opacity 0.2s ease, transform 0.2s ease;
+/* Shade the top and bottom of the clip so the prompt and caption stay readable. */
+.clip-card__media::before, .clip-card__media::after {
+  content: ""; position: absolute; left: 0; right: 0; height: 35%; pointer-events: none;
 }
-.clip-card.is-frozen .clip-card__prompt { opacity: 1; transform: none; }
-.clip-card--resolved .clip-card__prompt { display: none; }
+.clip-card__media::before { top: 0; background: linear-gradient(rgb(0 0 0 / 0.5), transparent); }
+.clip-card__media::after { bottom: 0; background: linear-gradient(transparent, rgb(0 0 0 / 0.5)); }
+.clip-card__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .clip-card__hud {
-  position: absolute; top: 0.75rem; left: 0.75rem; right: 0.75rem;
+  position: absolute; z-index: 1; top: 0.6rem; left: 0.6rem; right: 0.6rem;
   display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
 }
 .clip-card__countdown {
-  padding: 0.25rem 0.6rem; border-radius: 999px; background: rgb(0 0 0 / 0.6);
-  font-size: 0.8rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  padding: 0.2rem 0.55rem; border-radius: 999px; background: rgb(0 0 0 / 0.55); color: #fff;
+  font-size: 0.75rem; font-weight: 600; font-variant-numeric: tabular-nums;
 }
-.clip-card__controls { position: absolute; right: 0.75rem; bottom: 0.75rem; display: grid; gap: 0.5rem; }
-.clip-card__body {
-  flex: 1 1 auto; overflow-y: auto; padding: 0.9rem 1rem 1.1rem;
-  display: flex; flex-direction: column; gap: 0.55rem;
+.clip-card__question {
+  position: absolute; z-index: 1; top: 2.5rem; left: 1rem; right: 1rem; margin: 0;
+  text-align: center; font-size: 1.05rem; font-weight: 600; line-height: 1.25; letter-spacing: 0;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.6);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.clip-card__byline { margin: 0; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
-.clip-card__question { margin: 0; font-size: 1.25rem; font-weight: 800; letter-spacing: -0.01em; }
-.clip-card__question a { color: var(--text); }
-.clip-card__pool { margin: 0; color: var(--muted); font-size: 0.88rem; }
-.clip-card__pool strong { color: var(--text); }
+.clip-card__question a { color: #fff; }
+.clip-card__caption {
+  position: absolute; z-index: 1; left: 0.75rem; right: 3.5rem; bottom: 0.7rem;
+  color: rgb(255 255 255 / 0.85); font-size: 0.78rem; line-height: 1.35; text-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
+}
+.clip-card__caption p { margin: 0; }
+.clip-card__byline { font-weight: 600; }
+.clip-card__pool strong { color: #fff; }
+.clip-card__controls { position: absolute; z-index: 1; right: 0.6rem; bottom: 0.6rem; display: grid; gap: 0.4rem; }
+
+/* Review screens: the whole card is framed and glows in the bet's state color. */
+.clip-card--review {
+  border-color: var(--state);
+  box-shadow:
+    inset 0 0 0 4px color-mix(in srgb, var(--state) 25%, transparent),
+    inset 0 0 14px color-mix(in srgb, var(--state) 40%, transparent);
+}
+.clip-card--pending { --state: var(--state-pending); }
+.clip-card--won { --state: var(--state-won); }
+.clip-card--lost { --state: var(--state-lost); }
+.clip-card--refunded { --state: var(--faint); }
 
 .badge {
   display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px;
-  font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
 }
-.badge--open { background: var(--loss); color: #fff; }
-.badge--locked { background: var(--pending); color: #1a1300; }
-.badge--resolved { background: var(--win); color: #062016; }
+.badge--open { background: var(--accent); color: var(--accent-ink); }
+.badge--locked { background: var(--state-pending); color: #2c2c2a; }
+.badge--resolved { background: var(--state-won); color: #ffffff; }
 .badge--cancelled { background: var(--surface-2); color: var(--muted); }
 
 .feed-end, .empty-state {
@@ -198,55 +272,152 @@ img, video { max-width: 100%; display: block; }
 .empty-state h1, .empty-state h2 { color: var(--text); }
 .empty-state--inline { min-height: auto; padding: 2rem 1rem; border: 1px dashed var(--border); border-radius: var(--radius); }
 
-.single-clip { max-width: 480px; margin: 0 auto 3rem; }
-.single-clip .clip-card { height: auto; min-height: 0; }
-.single-clip .clip-card__media { height: 55vh; }
+.single-clip { max-width: 480px; margin: 0 auto 3rem; padding-top: 0.5rem; }
+.single-clip .clip-card { height: auto; }
+.single-clip .clip-card__media { flex: none; height: 55vh; }
 .market-details { padding: 1.25rem 1rem; }
 .market-details h2 { font-size: 1.05rem; margin-top: 1.25rem; }
 
-/* ---------- outcomes & bet form ---------- */
-.outcomes { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
-.outcome {
-  position: relative;
-  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
-  padding: 0.6rem 0.8rem; border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background:
-    linear-gradient(to right, rgb(139 92 246 / 0.28) var(--share, 0%), transparent var(--share, 0%)),
-    var(--surface-2);
+/* ---------- bet pad ---------- */
+/* Fixed 150 px. Outcome sections fill it (halves, a top band plus halves, or quadrants);
+   the stake button sits in the middle, the −/+ hold toggle under it. */
+.bet-pad { position: relative; flex: none; height: 150px; margin: 0; }
+.bet-pad__sections {
+  list-style: none; margin: 0; padding: 0; position: absolute; inset: 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
 }
-.outcome__label { font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
-.outcome__stats { display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-.outcome__odds { color: var(--accent-2); font-weight: 800; }
-.outcome__winner { color: var(--win); font-weight: 800; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.06em; }
-.outcome--winner { border-color: var(--win); background: linear-gradient(to right, rgb(52 211 153 / 0.25) var(--share, 0%), transparent var(--share, 0%)), var(--surface-2); }
-.outcome--picked { box-shadow: inset 0 0 0 2px var(--accent); }
-.outcome--selectable { cursor: pointer; }
-.outcome--selectable:hover { border-color: var(--accent); }
-/* The label's pseudo-element stretches over the whole row so the entire bar is tappable. */
-.outcome__hit { cursor: pointer; }
-.outcome__hit::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
-.outcome__radio { accent-color: var(--accent); width: 1.05rem; height: 1.05rem; margin: 0; }
-.outcome--selectable:has(.outcome__radio:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+.bet-pad--2 .bet-pad__sections { grid-template-rows: 1fr; }
+/* Equal-area thirds: a full-width band one third tall, then two halves two thirds tall. */
+.bet-pad--3 .bet-pad__sections { grid-template-rows: 1fr 2fr; }
+.bet-pad--3 .bet-pad__section--u { grid-column: 1 / -1; }
+.bet-pad--4 .bet-pad__sections { grid-template-rows: 1fr 1fr; }
 
-.bet-form { display: grid; gap: 0.6rem; margin: 0; }
-.stake-row { display: flex; align-items: flex-end; gap: 0.6rem; flex-wrap: wrap; }
-.stake-chips { display: flex; gap: 0.35rem; flex: 1; }
-.chip {
-  flex: 1; min-width: 44px; padding: 0.5rem 0; border-radius: 999px; cursor: pointer;
-  background: var(--surface-2); color: var(--text); border: 1px solid var(--border); font: inherit; font-weight: 700;
+.outcome.bet-pad__section {
+  position: relative; min-width: 0; padding: 7px 9px; border-radius: 10px;
+  background: var(--surface-2);
+  display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 1px;
+  font-size: 0.75rem; line-height: 1.3; color: var(--muted);
 }
-.chip:hover, .chip.is-active { border-color: var(--accent); background: rgb(139 92 246 / 0.2); }
-.stake-input { display: grid; gap: 0.15rem; width: 96px; }
-.stake-input label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
-.stake-input input { width: 100%; }
-.bet-form__estimate { margin: 0; font-size: 0.85rem; color: var(--muted); min-height: 1.3em; }
-.bet-status { display: grid; gap: 0.35rem; font-size: 0.92rem; }
+/* Keep text clear of the button in the middle. */
+.bet-pad__section--l, .bet-pad__section--ul, .bet-pad__section--dl { padding-right: 40px; }
+.bet-pad__section--r, .bet-pad__section--ur, .bet-pad__section--dr { padding-left: 40px; align-items: flex-end; text-align: right; }
+.bet-pad__section--ul, .bet-pad__section--ur { justify-content: flex-start; }
+.bet-pad__section--dl, .bet-pad__section--dr { justify-content: flex-end; }
+.bet-pad__section--u {
+  flex-flow: row wrap; justify-content: center; align-content: flex-start; align-items: baseline;
+  column-gap: 0.35rem; text-align: center; padding-top: 5px;
+}
+.bet-pad__section--u > :first-child { flex-basis: 100%; }
+.bet-pad__section--u .outcome__label { justify-content: center; }
+
+.outcome__hit { display: flex; max-width: 100%; cursor: pointer; }
+/* The label's pseudo-element stretches over the whole section so all of it is tappable. */
+.outcome__hit::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.outcome__label {
+  display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 0.85rem; font-weight: 600; color: var(--text);
+}
+.outcome__stats { display: flex; gap: 0.3rem; font-variant-numeric: tabular-nums; }
+.outcome__stats > * + *::before { content: "· "; }
+.outcome__odds, .outcome__wins { color: var(--text); font-variant-numeric: tabular-nums; }
+.outcome__winner { color: var(--win); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.outcome--winner { box-shadow: inset 0 0 0 2px var(--state-won); }
+.bet-pad__section:has(.outcome__radio:checked), .bet-pad__section.is-aimed {
+  background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+.bet-pad__section.is-aimed { box-shadow: inset 0 0 0 2.5px var(--accent); }
+.bet-pad__section:has(.outcome__radio:checked) .outcome__label,
+.bet-pad__section.is-aimed .outcome__label { color: var(--accent-soft-ink); }
+.bet-pad__section:has(.outcome__radio:focus-visible) { outline: 3px solid var(--accent-2); outline-offset: 2px; }
+
+.bet-pad__button {
+  position: absolute; z-index: 2; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 66px; height: 66px; padding: 0; border-radius: 50%;
+  background: var(--accent); color: var(--accent-ink); border: 4px solid var(--surface);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font: inherit; cursor: grab; touch-action: none;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.bet-pad__button:active { cursor: grabbing; filter: brightness(0.92); }
+.bet-pad__stake { font-size: 1.05rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+.bet-pad__mode { font-size: 0.62rem; line-height: 1; margin-top: 3px; }
+.bet-pad__button--link {
+  width: auto; height: auto; min-height: 44px; padding: 0.5rem 1rem; border-radius: 999px;
+  font-size: 0.85rem; font-weight: 600; white-space: nowrap; cursor: pointer;
+}
+.bet-pad__button--link:hover { text-decoration: none; filter: brightness(1.08); }
+.bet-pad__button--static {
+  background: var(--surface); color: var(--muted); cursor: default;
+  font-size: 0.72rem; font-weight: 600; box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.bet-pad__modes {
+  position: absolute; z-index: 2; left: 50%; bottom: 6px; transform: translateX(-50%);
+  display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--surface);
+}
+.bet-pad__mode-btn {
+  width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--muted); font: inherit; font-size: 1rem; line-height: 1; cursor: pointer;
+}
+.bet-pad__mode-btn.is-on { background: var(--accent-soft); color: var(--accent-soft-ink); }
+/* Minus mode: the button turns red so a hold that lowers the stake never looks like one that raises it. */
+.bet-pad.is-lowering .bet-pad__button { background: var(--minus); }
+.bet-pad.is-lowering .bet-pad__mode-btn.is-on { background: var(--minus-soft); color: var(--minus-soft-ink); }
+
+/* Keyboard / no-JavaScript path: hidden until it holds focus, then pops up over the pad. */
+.bet-pad__fallback {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+.bet-pad__fallback:focus-within {
+  z-index: 4; left: 50%; bottom: 100%; transform: translate(-50%, -8px);
+  width: auto; height: auto; overflow: visible; clip: auto;
+  display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.6rem;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow);
+}
+.bet-pad__fallback label { font-size: 0.8rem; font-weight: 600; }
+.bet-pad__fallback input[type="number"] { width: 5.5rem; padding: 0.35rem 0.5rem; }
+
+.bet-pad__confirm {
+  position: absolute; inset: 0; z-index: 3; border-radius: 10px;
+  display: grid; place-items: center; background: color-mix(in srgb, var(--surface) 85%, transparent);
+}
+.bet-pad__confirm[hidden] { display: none; }
+.bet-pad__confirm button {
+  position: relative; overflow: hidden; display: grid; justify-items: center; gap: 0.15rem;
+  padding: 0.75rem 1.4rem; border-radius: 14px; border: 1.5px solid var(--accent);
+  background: var(--accent-soft); color: var(--accent-soft-ink); font: inherit; cursor: pointer;
+}
+.bet-pad__confirm strong { font-size: 1.05rem; }
+.bet-pad__confirm span { font-size: 0.75rem; }
+/* Drains over the 1 s undo window. */
+.bet-pad__confirm button::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+  background: var(--accent); transform-origin: left; animation: undo-window 1s linear forwards;
+}
+@keyframes undo-window { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+.bet-pad__hint {
+  position: absolute; z-index: 3; left: 50%; top: -2.1rem; transform: translateX(-50%); margin: 0;
+  padding: 0.25rem 0.7rem; border-radius: 999px; background: rgb(0 0 0 / 0.72); color: #fff;
+  font-size: 0.75rem; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.15s ease;
+}
+.bet-pad__hint.is-visible { opacity: 1; }
+.clip-card.is-locked .bet-pad--live { pointer-events: none; opacity: 0.55; }
+
+.bet-pad--review { display: grid; place-items: center; }
+.bet-pad__result { display: grid; justify-items: center; gap: 2px; }
+.bet-pad__figure { font-size: 1.75rem; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--text); }
+.clip-card--won .bet-pad__figure { color: var(--win); }
+.clip-card--lost .bet-pad__figure { color: var(--loss); }
+.bet-pad__state { font-size: 0.8rem; color: var(--muted); }
+.clip-card--pending .bet-pad__state { color: var(--pending); }
+
+.bet-status { flex: none; padding: 0 0.25rem; font-size: 0.8rem; text-align: center; color: var(--muted); }
+.bet-status:empty { display: none; }
 .bet-status p { margin: 0; }
 .bet-status--won { color: var(--win); }
 .bet-status--lost { color: var(--loss); }
-.bet-status__result { font-weight: 600; }
-.clip-card.is-locked .bet-form .chip { pointer-events: none; opacity: 0.5; }
+.bet-status__result { font-weight: 600; color: var(--text); }
 
 /* ---------- pages ---------- */
 .page { max-width: 880px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
@@ -271,12 +442,12 @@ input[type="text"], input[type="email"], input[type="password"], input[type="num
   width: 100%; padding: 0.65rem 0.8rem; border-radius: var(--radius-sm);
   border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit;
 }
-input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgb(139 92 246 / 0.3); }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
 .outcome-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
 @media (max-width: 520px) { .outcome-fields { grid-template-columns: 1fr; } }
 .form-errors {
   padding: 0.85rem 1rem; border-radius: var(--radius-sm);
-  background: rgb(251 113 133 / 0.12); border: 1px solid rgb(251 113 133 / 0.5);
+  background: color-mix(in srgb, var(--state-lost) 12%, transparent); border: 1px solid color-mix(in srgb, var(--state-lost) 50%, transparent);
 }
 .form-errors p { margin: 0 0 0.35rem; }
 .form-errors ul { margin: 0; padding-left: 1.2rem; }
@@ -307,7 +478,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); outline
 /* ---------- wallet ---------- */
 .wallet-hero {
   padding: 1.5rem; border-radius: var(--radius);
-  background: linear-gradient(135deg, rgb(139 92 246 / 0.35), rgb(34 211 238 / 0.15)), var(--surface);
+  background: var(--accent-soft);
   border: 1px solid var(--border);
 }
 .wallet-hero p { margin: 0; }
@@ -316,7 +487,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); outline
 .wallet-hero__balance { font-size: 2.4rem; font-weight: 900; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .wallet-hero__unit { font-size: 1rem; font-weight: 700; color: var(--muted); letter-spacing: 0; }
 .wallet-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; margin: 1rem 0 0; }
-.wallet-stats div { padding: 0.5rem 0.6rem; border-radius: var(--radius-sm); background: rgb(11 11 18 / 0.5); }
+.wallet-stats div { padding: 0.5rem 0.6rem; border-radius: var(--radius-sm); background: var(--surface); }
 .wallet-stats dt { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
 .wallet-stats dd { margin: 0; font-weight: 800; font-size: 1.1rem; }
 .bet-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
@@ -356,7 +527,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); outline
 .steps li::before {
   content: counter(step); position: absolute; left: 1rem; top: 1rem;
   width: 1.8rem; height: 1.8rem; border-radius: 50%; display: grid; place-items: center;
-  background: var(--accent); font-weight: 800;
+  background: var(--accent); color: var(--accent-ink); font-weight: 800;
 }
 .steps h2 { margin: 0 0 0.25rem; font-size: 1.05rem; }
 .steps p { margin: 0; color: var(--muted); }

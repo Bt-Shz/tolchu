@@ -1,0 +1,23 @@
+<%# The status row above the feed: one tile per bet this session (yellow pending, red lost,
+    green won), newest on the right, and the session's net result. Tapping a tile opens that clip. %>
+<div id="session-strip" class="session-strip">
+  <span class="session-strip__label">Session</span>
+  <% if (strip = session_strip) %>
+    <ol class="session-strip__tiles" aria-label="Your bets this session, newest first">
+      <% strip.bets.each do |bet| %>
+        <li>
+          <%= link_to "", market_path(bet.market), class: "session-tile session-tile--#{bet.status}",
+                title: "#{bet.market.question}: #{bet_status_label(bet)}",
+                aria: { label: "#{bet.market.question}: #{bet_status_label(bet)}" } %>
+        </li>
+      <% end %>
+    </ol>
+    <% if strip.bets.empty? %>
+      <span class="session-strip__empty">Flick a card to start</span>
+    <% end %>
+    <span class="session-strip__net <%= strip.net.negative? ? "amount--down" : ("amount--up" if strip.net.positive?) %>"
+          title="Net result of your settled bets this session"><%= signed_credits(strip.net) %></span>
+  <% else %>
+    <span class="session-strip__empty"><%= link_to "Sign in", new_session_path %> to keep score</span>
+  <% end %>
+</div>

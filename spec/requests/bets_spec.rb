@@ -51,6 +51,7 @@ RSpec.describe "Bets" do
       expect(response.media_type).to eq("text/vnd.turbo-stream.html")
       expect(response.body).to include(%(<turbo-stream action="replace" target="market_#{market.id}">))
       expect(response.body).to include(%(<turbo-stream action="update" target="wallet-balance"><template>950</template>))
+      expect(response.body).to include(%(<turbo-stream action="replace" target="session-strip">), %(class="session-tile session-tile--pending"))
       expect(response.body).to include("You picked <strong>Lands it</strong> for 50 credits")
       expect(response.body).to include("Prediction locked in: Lands it for 50 credits.")
     end

@@ -1,5 +1,8 @@
 module ApplicationHelper
   PHASE_LABELS = { open: "Live", locked: "Locked", resolved: "Settled", cancelled: "Cancelled" }.freeze
+  # Flick direction for each outcome on the bet pad, in outcome order: halves for 2,
+  # a top band plus two halves for 3, quadrants for 4.
+  PAD_DIRECTIONS = { 2 => %w[l r], 3 => %w[u l r], 4 => %w[ul ur dl dr] }.freeze
 
   # 1 credit / 1,250 credits
   def credits(amount)
@@ -47,5 +50,24 @@ module ApplicationHelper
     when :lost then "Lost #{signed_credits(bet.net)}"
     when :refunded then "Refunded"
     end
+  end
+
+  def pad_directions(count)
+    PAD_DIRECTIONS.fetch(count)
+  end
+
+  # Credits a stake on this outcome would pay back if it won, at the current pool.
+  def projected_payout(market, outcome, stake)
+    (market.projected_multiplier(outcome, stake:) * stake).floor
+  end
+
+  # m:ss until betting locks (h:mm:ss past an hour), matching countdown_controller.js. Nil once locked.
+  def lock_clock(market, now: Time.current)
+    remaining = (market.locks_at - now).ceil
+    return if remaining <= 0
+
+    hours, rest = remaining.divmod(3600)
+    minutes, seconds = rest.divmod(60)
+    hours.positive? ? format("%d:%02d:%02d", hours, minutes, seconds) : format("%d:%02d", minutes, seconds)
   end
 end

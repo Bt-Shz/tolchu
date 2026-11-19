@@ -10,4 +10,14 @@ class ApplicationController < ActionController::Base
 
   # Public pages still need to know who is signed in (balance in the nav, existing bets, etc.).
   before_action :resume_session
+
+  helper_method :session_strip
+
+  private
+    # Bets placed since the viewer signed in, for the status row above the feed.
+    def session_strip
+      return unless Current.session
+
+      @session_strip ||= SessionStrip.new(user: Current.user, since: Current.session.created_at)
+    end
 end

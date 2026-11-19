@@ -33,9 +33,9 @@ Demo accounts (password for all: `password123`):
 | `courtvision@tolchu.app` | Creator of the basketball clips, with one market waiting for a result |
 
 1. **Sign up** (or use `fan@tolchu.app`). New accounts get 1,000 credits.
-2. **Scroll the feed.** Each clip plays up to its freeze frame and asks *what happens next?* The bars show how the
-   pool is split. `×1.86` is what each credit pays if that outcome wins.
-3. **Place a bet:** pick an outcome, tap a stake chip (max 100 per market), and press **Place bet**.
+2. **Scroll the feed.** Each clip plays up to its freeze frame and asks *what happens next?* Each outcome's section
+   shows its share of the pool, `×1.86` (what each credit pays if it wins) and what your current stake would win.
+3. **Place a bet:** flick the round stake button toward an outcome (hold it first to raise the stake, max 100 per market). You have 1 second to tap **undo**. On a keyboard, pick an outcome, set the stake with the arrow keys, and press Enter.
    The card, pool, and your balance update in place.
 4. **Settle a market:** sign in as `courtvision@tolchu.app`, open **Studio**, and declare the result of
    *"Does #67 finish at the rim?"* (betting is already locked). Payouts land immediately. Check a bettor's

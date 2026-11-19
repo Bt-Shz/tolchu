@@ -35,6 +35,7 @@ class BetsController < ApplicationController
       render turbo_stream: [
         turbo_stream.replace(market, partial: "markets/market", locals: { market:, viewer_bet: bet, context: return_context }),
         turbo_stream.update("wallet-balance", Current.user.reload.balance.to_fs(:delimited)),
+        turbo_stream.replace("session-strip", partial: "markets/session_strip"),
         turbo_stream.update("flash", partial: "layouts/flash")
       ]
     end

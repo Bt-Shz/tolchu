@@ -25,6 +25,44 @@ RSpec.describe "Markets" do
       expect(response.body).to include("Place bet", %(name="outcome_id"), %(name="stake"), %(value="feed"))
     end
 
+    it "lays the outcomes out on the bet pad with the default stake and what it would win" do
+      place_bet(user: create(:user), market:, outcome: "Lands it", stake: 60)
+      place_bet(user: create(:user), market:, outcome: "Bails", stake: 40)
+      sign_in_as create(:user)
+
+      get root_path
+
+      expect(response.body).to include("bet-pad--2", "bet-pad__section--l", "bet-pad__section--r", %(data-controller="bet-pad"))
+      # 10 on Lands it: pool 110, rake 5, so 105 × 10 / 70 = 15.
+      expect(response.body).to include(%(value="#{Bet::DEFAULT_STAKE}"), "wins 15")
+    end
+
+    it "keeps score of this session's bets above the feed" do
+      fan = create(:user)
+      sign_in_as fan
+      place_bet(user: fan, market:, outcome: "Bails", stake: 20)
+
+      get root_path
+
+      expect(response.body).to include(%(id="session-strip"), "session-tile--pending", "Will he land the kickflip?: Pending")
+    end
+
+    it "invites guests to sign in to keep score" do
+      get root_path
+
+      expect(response.body).to include(%(id="session-strip"), "to keep score")
+    end
+
+    it "turns the card into a pending review screen once the fan has bet" do
+      fan = create(:user)
+      place_bet(user: fan, market:, outcome: "Bails", stake: 20)
+      sign_in_as fan
+
+      get root_path
+
+      expect(response.body).to include("clip-card--review clip-card--pending", "bet-pad--review", ">pending<")
+    end
+
     it "shows the fan's existing prediction instead of the form" do
       fan = create(:user)
       place_bet(user: fan, market:, outcome: "Bails", stake: 20)

@@ -1,0 +1,108 @@
+<%# locals: (market:, viewer_bet:, context:, phase:) %>
+<%# The 150 px pad under the clip. Bettable: flick the center button toward an outcome
+    (bet_pad_controller.js); without JavaScript, pick a section and press "Place bet".
+    After betting: a review screen showing the countdown or the result in the button slot. %>
+<% bettable = phase == :open && viewer_bet.nil? && Current.user && !Current.user.creator_of?(market) %>
+
+<% if viewer_bet %>
+  <div class="bet-pad bet-pad--review">
+    <div class="bet-pad__result">
+      <% case viewer_bet.status.to_sym %>
+      <% when :pending %>
+        <span class="bet-pad__figure" data-countdown-target="clock"><%= (phase == :open && lock_clock(market)) || "locked" %></span>
+        <span class="bet-pad__state">pending</span>
+      <% when :won %>
+        <span class="bet-pad__figure"><%= signed_credits(viewer_bet.net) %></span>
+        <span class="bet-pad__state">won</span>
+      <% when :lost %>
+        <span class="bet-pad__figure"><%= signed_credits(viewer_bet.net) %></span>
+        <span class="bet-pad__state">lost</span>
+      <% when :refunded %>
+        <span class="bet-pad__figure">0</span>
+        <span class="bet-pad__state">refunded</span>
+      <% end %>
+    </div>
+  </div>
+<% elsif bettable %>
+  <%= form_with url: market_bets_path(market),
+        class: "bet-pad bet-pad--live bet-pad--#{market.outcomes.size}",
+        data: {
+          controller: "bet-pad",
+          action: "submit->bet-pad#submit turbo:submit-end->bet-pad#submitted",
+          bet_pad_pools_value: market.outcomes.to_h { |outcome| [ outcome.id, outcome.pool ] }.to_json,
+          bet_pad_total_pool_value: market.total_pool,
+          bet_pad_rake_rate_value: Parimutuel::RAKE_RATE.to_f,
+          bet_pad_min_value: Bet::MIN_STAKE,
+          bet_pad_max_value: Current.user.balance.clamp(Bet::MIN_STAKE, Bet::MAX_STAKE)
+        } do %>
+    <%= hidden_field_tag :context, context, id: nil %>
+    <%= render "markets/pad_sections", market:, selectable: true %>
+
+    <button type="button" class="bet-pad__button" data-bet-pad-target="button"
+            data-action="pointerdown->bet-pad#press pointermove->bet-pad#drag pointerup->bet-pad#release pointercancel->bet-pad#cancel keydown->bet-pad#key contextmenu->bet-pad#suppress"
+            aria-label="Stake <%= Bet::DEFAULT_STAKE %> credits. Flick toward an outcome to bet, hold to change the stake, or use the arrow keys.">
+      <span class="bet-pad__stake" data-bet-pad-target="stakeLabel"><%= Bet::DEFAULT_STAKE %></span>
+      <span class="bet-pad__mode" data-bet-pad-target="modeLabel">▲ hold</span>
+    </button>
+
+    <div class="bet-pad__modes" role="group" aria-label="What holding the button does">
+      <button type="button" class="bet-pad__mode-btn" aria-pressed="false" aria-label="Hold lowers the stake"
+              data-bet-pad-target="modeButton" data-action="bet-pad#setMode" data-bet-pad-mode-param="-1">−</button>
+      <button type="button" class="bet-pad__mode-btn is-on" aria-pressed="true" aria-label="Hold raises the stake"
+              data-bet-pad-target="modeButton" data-action="bet-pad#setMode" data-bet-pad-mode-param="1">+</button>
+    </div>
+
+    <%# Keyboard and no-JavaScript path; hidden until something inside it has focus. %>
+    <div class="bet-pad__fallback">
+      <%= label_tag dom_id(market, :stake), "Stake" %>
+      <%= number_field_tag :stake, Bet::DEFAULT_STAKE, id: dom_id(market, :stake), min: Bet::MIN_STAKE, max: Bet::MAX_STAKE, step: 1,
+            inputmode: "numeric", required: true, data: { bet_pad_target: "input", action: "input->bet-pad#render" } %>
+      <%= submit_tag "Place bet", class: "btn btn--primary btn--small", data: { countdown_target: "submit" } %>
+    </div>
+
+    <div class="bet-pad__confirm" data-bet-pad-target="confirm" hidden>
+      <button type="button" data-action="bet-pad#undo">
+        <strong data-bet-pad-target="confirmText"></strong>
+        <span>Tap to undo</span>
+      </button>
+    </div>
+    <p class="bet-pad__hint" data-bet-pad-target="hint" aria-live="polite"></p>
+  <% end %>
+<% else %>
+  <div class="bet-pad bet-pad--<%= market.outcomes.size %>">
+    <%= render "markets/pad_sections", market:, selectable: false %>
+    <% if phase == :open && Current.user.nil? %>
+      <%= link_to "Sign in to predict", new_session_path, class: "bet-pad__button bet-pad__button--link" %>
+    <% else %>
+      <span class="bet-pad__button bet-pad__button--static">
+        <%= { open: "Yours", locked: "Locked", resolved: "Settled", cancelled: "Void" }.fetch(phase) %>
+      </span>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="bet-status">
+  <% if viewer_bet %>
+    <% case viewer_bet.status.to_sym %>
+    <% when :pending %>
+      <p>You picked <strong><%= viewer_bet.outcome.label %></strong> for <%= credits(viewer_bet.stake) %>.
+        <%= phase == :open ? "Results land when the play does." : "Betting is closed. Waiting for the result." %></p>
+    <% when :won %>
+      <p class="bet-status--won">You called it! <strong><%= viewer_bet.outcome.label %></strong> paid <%= credits(viewer_bet.payout) %> (<%= signed_credits(viewer_bet.net) %>).</p>
+    <% when :lost %>
+      <p class="bet-status--lost">You picked <strong><%= viewer_bet.outcome.label %></strong> and lost <%= credits(viewer_bet.stake) %>.</p>
+    <% when :refunded %>
+      <p>Your <%= credits(viewer_bet.stake) %> on <strong><%= viewer_bet.outcome.label %></strong> was refunded.</p>
+    <% end %>
+  <% elsif phase == :open && Current.user && Current.user.creator_of?(market) %>
+    <p>You created this market, so you can't bet on it. <%= link_to "Manage it in Studio", studio_markets_path %></p>
+  <% elsif phase == :locked %>
+    <p>Betting closed. Waiting for the result.</p>
+  <% end %>
+
+  <% if phase == :resolved %>
+    <p class="bet-status__result">Result: <strong><%= market.winning_outcome.label %></strong><%= ". No contest, so all stakes were refunded" if market.refunded? %></p>
+  <% elsif phase == :cancelled %>
+    <p class="bet-status__result">This market was cancelled and every stake was refunded.</p>
+  <% end %>
+</div>
