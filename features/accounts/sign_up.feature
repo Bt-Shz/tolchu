@@ -8,8 +8,7 @@ Feature: Sign up for an account
 
   Scenario: Signing up gives me 1,000 starting credits
     When I sign up as "rookie" with email "rookie@example.com" and password "password123"
-    Then I should see "Welcome to Tolchu, rookie! You have 1,000 free credits to play with."
-    And my balance should be 1,000 credits
+    Then my balance should be 1,000 credits
     And my wallet should show "Welcome bonus" for +1,000 credits
 
   Scenario: Usernames are unique, ignoring capitalisation

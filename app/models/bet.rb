@@ -1,11 +1,7 @@
-# A single prediction: one user, one market, one outcome, one stake.
-# Create bets through Betting::PlaceBet, which also debits the wallet and
-# updates the cached pools inside a single locked transaction.
 class Bet < ApplicationRecord
   MIN_STAKE = 1
-  # Hard per-user, per-market cap so no single bettor can dominate (or manipulate) a pool.
   MAX_STAKE = 100
-  QUICK_STAKES = [ 10, 25, 50, 100 ].freeze
+  DEFAULT_STAKE = 10
 
   belongs_to :user
   belongs_to :market, counter_cache: true
@@ -22,7 +18,6 @@ class Bet < ApplicationRecord
   validate :creator_cannot_bet_on_own_market, on: :create
   validate :market_must_be_accepting_bets, on: :create
 
-  # Profit or loss once settled (payout minus stake); nil while pending.
   def net
     payout - stake if payout
   end

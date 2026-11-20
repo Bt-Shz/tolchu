@@ -19,8 +19,6 @@ class User < ApplicationRecord
   validates :password, length: { minimum: 8 }, allow_nil: true
   validates :balance, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
-  # Creates the account and grants the play-money starting balance in one transaction,
-  # so every user's balance is backed by a ledger entry from day one.
   def self.register(attributes)
     new(attributes).tap do |user|
       transaction do

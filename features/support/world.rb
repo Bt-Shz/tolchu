@@ -1,5 +1,3 @@
-# Shared helpers for step definitions. Given steps build state directly
-# (factories and services); When steps drive the real UI through Capybara.
 module TolchuWorld
   DEFAULT_PASSWORD = "password123".freeze
 
@@ -14,7 +12,7 @@ module TolchuWorld
     fill_in "Email", with: user.email_address
     fill_in "Password", with: DEFAULT_PASSWORD
     click_button "Sign in"
-    expect(page).to have_css("#wallet-balance")
+    expect(page).to have_no_link("Sign in", exact: true)
     @current_user = user
   end
 
@@ -59,7 +57,6 @@ module TolchuWorld
     ApplicationController.helpers
   end
 
-  # Form helpers shared by the When steps.
   def submit_sign_up(username:, email:, password:, confirmation:)
     fill_in "Username", with: username
     fill_in "Email", with: email

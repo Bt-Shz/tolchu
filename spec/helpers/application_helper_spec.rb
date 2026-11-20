@@ -62,4 +62,37 @@ RSpec.describe ApplicationHelper do
       expect(helper.bet_status_label(bet)).to eq("Refunded")
     end
   end
+
+  describe "bet pad helpers" do
+    it "maps outcomes to flick directions by count" do
+      expect(helper.pad_directions(2)).to eq(%w[l r])
+      expect(helper.pad_directions(3)).to eq(%w[u l r])
+      expect(helper.pad_directions(4)).to eq(%w[ul ur dl dr])
+    end
+
+    it "projects what a stake would pay back, rounded down" do
+      market = create(:market)
+      place_bet(user: create(:user), market:, outcome: "Lands it", stake: 70)
+      place_bet(user: create(:user), market:, outcome: "Bails", stake: 30)
+
+      expect(helper.projected_payout(market.reload, market.outcomes.find_by!(label: "Bails"), 10)).to eq(26)
+    end
+
+    it "measures how much of the betting window is left" do
+      market = build(:market, created_at: Time.zone.local(2026, 11, 19, 12, 0, 0), locks_at: Time.zone.local(2026, 11, 19, 12, 10, 0))
+
+      expect(helper.lock_progress(market, now: market.created_at)).to eq(1.0)
+      expect(helper.lock_progress(market, now: market.created_at + 150.seconds)).to eq(0.75)
+      expect(helper.lock_progress(market, now: market.locks_at + 1.second)).to eq(0.0)
+      expect(helper.lock_progress(build(:market, created_at: market.locks_at, locks_at: market.locks_at))).to eq(0.0)
+    end
+
+    it "shows the time left before the lock as a clock" do
+      market = build(:market, locks_at: Time.zone.local(2026, 11, 19, 12, 0, 0))
+
+      expect(helper.lock_clock(market, now: market.locks_at - 161.seconds)).to eq("2:41")
+      expect(helper.lock_clock(market, now: market.locks_at - 3_725.seconds)).to eq("1:02:05")
+      expect(helper.lock_clock(market, now: market.locks_at)).to be_nil
+    end
+  end
 end

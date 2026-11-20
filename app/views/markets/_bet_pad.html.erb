@@ -1,0 +1,47 @@
+<%# locals: (market:, viewer_bet:, context:, phase:) %>
+<% bettable = phase == :open && viewer_bet.nil? && Current.user && !Current.user.creator_of?(market) %>
+
+<% if viewer_bet %>
+  <% editable = viewer_bet.pending? && phase == :open %>
+  <%= tag.div class: "bet-pad-slot", data: (editable ? { controller: "bet-edit" } : {}) do %>
+    <%= tag.div class: "bet-pad bet-pad--review", data: (editable ? { bet_edit_target: "review" } : {}) do %>
+      <div class="bet-pad__result">
+        <% case viewer_bet.status.to_sym %>
+        <% when :pending %>
+          <span class="bet-pad__figure" data-countdown-target="clock"><%= (phase == :open && lock_clock(market)) || "locked" %></span>
+        <% when :refunded %>
+          <span class="bet-pad__figure">refunded</span>
+        <% else %>
+          <span class="bet-pad__figure"><%= signed_credits(viewer_bet.net) %><span class="bet-pad__unit" aria-hidden="true">◎</span><span class="visually-hidden"> credits</span></span>
+        <% end %>
+      </div>
+      <div class="bet-pill-row">
+        <p class="bet-pill bet-pill--<%= viewer_bet.status %>" data-controller="expand" data-expand-class-value="is-expanded">
+          <button type="button" class="bet-pill__pick" data-action="expand#toggle" aria-expanded="false"
+                  title="<%= viewer_bet.outcome.label %>"><%= viewer_bet.outcome.label %></button>
+          <span class="bet-pill__stake"><span aria-hidden="true">◎</span> <%= viewer_bet.stake.to_fs(:delimited) %><span class="visually-hidden"> credits</span></span>
+          <span class="bet-pill__odds" title="<%= viewer_bet.pending? ? "Current payout per credit if this wins" : "Payout per credit" %>"><%= multiplier(bet_multiplier(viewer_bet)) %></span>
+        </p>
+        <% if editable %>
+          <button type="button" class="bet-pill__edit" data-action="bet-edit#open" aria-label="Change your bet">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L18.5 9.5a2.83 2.83 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>
+          </button>
+        <% end %>
+      </div>
+    <% end %>
+    <%= render "markets/bet_form", market:, context:, bet: viewer_bet, hidden: true if editable %>
+  <% end %>
+<% elsif bettable %>
+  <%= render "markets/bet_form", market:, context: %>
+<% else %>
+  <div class="bet-pad bet-pad--<%= market.outcomes.size %>">
+    <%= render "markets/pad_sections", market:, selectable: false %>
+    <% if phase == :open && Current.user.nil? %>
+      <%= link_to "Sign in to predict", new_session_path, class: "bet-pad__button bet-pad__button--link" %>
+    <% else %>
+      <span class="bet-pad__button bet-pad__button--static">
+        <%= { open: "Yours", locked: "Locked", resolved: "Settled", cancelled: "Void" }.fetch(phase) %>
+      </span>
+    <% end %>
+  </div>
+<% end %>

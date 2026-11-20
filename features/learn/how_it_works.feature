@@ -3,8 +3,8 @@ Feature: Learn how Tolchu works
   I want a plain-English explanation of how the shared pool works
   So that I understand what I'm betting on before I stake credits
 
-  Scenario: Reading the explainer from the feed
-    Given I am on the feed
+  Scenario: Reading the explainer from the navigation
+    Given I am on the sign in page
     When I follow "How it works"
     Then I should be on the how it works page
     And I should see "The house never bets against you"

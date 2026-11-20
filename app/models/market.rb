@@ -1,15 +1,6 @@
-# A "what happens next?" question attached to a short clip. Bets go into a
-# parimutuel pool that is split among the correct predictions once the creator
-# declares the result.
-#
-# Lifecycle: open -> locked -> resolved, or open/locked -> cancelled (full refund).
-# A market whose locks_at has passed stops taking bets immediately, even if the
-# status column still says "open". The clock is the source of truth for the lock.
 class Market < ApplicationRecord
   MIN_OUTCOMES = 2
   MAX_OUTCOMES = 4
-  # Label => minutes. Offered to creators instead of a raw datetime so the
-  # deadline is unambiguous regardless of the creator's time zone.
   BETTING_WINDOWS = {
     "1 minute" => 1,
     "5 minutes" => 5,
@@ -24,14 +15,15 @@ class Market < ApplicationRecord
   belongs_to :winning_outcome, class_name: "Outcome", optional: true
   has_many :outcomes, -> { order(:position, :id) }, dependent: :destroy, inverse_of: :market
   has_many :bets, dependent: :restrict_with_error
+  has_one :sealed_winner, -> { where(sealed_winner: true) }, class_name: "Outcome", inverse_of: :market
 
   enum :status, { open: "open", locked: "locked", resolved: "resolved", cancelled: "cancelled" },
        default: :open, validate: true
 
   accepts_nested_attributes_for :outcomes, reject_if: ->(attributes) { attributes["label"].blank? }
 
-  # Virtual attribute used by the studio form; converted into locks_at on create.
   attribute :betting_window_minutes, :integer
+  attribute :sealed_answer_label, :string
 
   validates :question, presence: true, length: { maximum: 140 }
   validates :description, length: { maximum: 500 }
@@ -44,12 +36,17 @@ class Market < ApplicationRecord
   validate :locks_at_must_be_in_the_future, on: :create
   validate :outcome_count_within_limits
   validate :outcome_labels_must_be_unique
+  validate :sealed_answer_must_be_an_outcome, on: :create
 
   before_validation :apply_betting_window, on: :create
   before_validation :assign_outcome_positions
+  before_validation :seal_answer, on: :create
 
   scope :accepting_bets, ->(now = Time.current) { open.where(arel_table[:locks_at].gt(now)) }
   scope :awaiting_result, ->(now = Time.current) { locked.or(open.where(arel_table[:locks_at].lteq(now))) }
+  scope :due_for_sealed_settlement, ->(now = Time.current) {
+    awaiting_result(now).where(id: Outcome.where(sealed_winner: true).select(:market_id))
+  }
 
   def accepting_bets?(now = Time.current)
     open? && now < locks_at
@@ -63,7 +60,6 @@ class Market < ApplicationRecord
     resolved? || cancelled?
   end
 
-  # What viewers should see right now: :open, :locked, :resolved or :cancelled.
   def phase(now = Time.current)
     return status.to_sym if settled?
 
@@ -74,7 +70,6 @@ class Market < ApplicationRecord
     Parimutuel.contest_score(outcomes.map(&:pool))
   end
 
-  # Payout multiple a new bet of `stake` on `outcome` would earn if it won, given the current pool.
   def projected_multiplier(outcome, stake: 0)
     Parimutuel.projected_multiplier(outcome_pool: outcome.pool, total_pool: total_pool, stake:)
   end
@@ -97,6 +92,18 @@ class Market < ApplicationRecord
       return if count.between?(MIN_OUTCOMES, MAX_OUTCOMES)
 
       errors.add(:outcomes, "must have between #{MIN_OUTCOMES} and #{MAX_OUTCOMES} options (you have #{count})")
+    end
+
+    def seal_answer
+      return if sealed_answer_label.nil?
+
+      outcomes.each { |outcome| outcome.sealed_winner = outcome.label.to_s.strip.casecmp?(sealed_answer_label.strip) }
+    end
+
+    def sealed_answer_must_be_an_outcome
+      return if sealed_answer_label.nil? || outcomes.any?(&:sealed_winner)
+
+      errors.add(:base, "Pick the outcome that actually happens")
     end
 
     def outcome_labels_must_be_unique

@@ -1,0 +1,54 @@
+<%# locals: (market:, context:, bet: nil, hidden: false) %>
+<% pools = market.outcomes.to_h { |outcome| [ outcome.id, outcome.pool ] } %>
+<% total_pool = market.total_pool %>
+<% if bet %>
+  <% pools[bet.outcome_id] -= bet.stake %>
+  <% total_pool -= bet.stake %>
+<% end %>
+<% stake = bet&.stake || Bet::DEFAULT_STAKE %>
+<%= form_with url: bet ? market_bet_path(market, bet) : market_bets_path(market), method: bet ? :patch : :post,
+      class: "bet-pad bet-pad--live bet-pad--#{market.outcomes.size}",
+      html: { hidden: },
+      data: {
+        controller: "bet-pad",
+        action: "turbo:submit-end->bet-pad#submitted",
+        bet_edit_target: ("editor" if bet),
+        bet_pad_pools_value: pools.to_json,
+        bet_pad_total_pool_value: total_pool,
+        bet_pad_rake_rate_value: Parimutuel::RAKE_RATE.to_f,
+        bet_pad_min_value: Bet::MIN_STAKE,
+        bet_pad_max_value: (Current.user.balance + bet&.stake.to_i).clamp(Bet::MIN_STAKE, Bet::MAX_STAKE)
+      } do %>
+  <%= hidden_field_tag :context, context, id: nil %>
+  <%= render "markets/pad_sections", market:, selectable: true, picked_id: bet&.outcome_id %>
+
+  <svg class="bet-pad__ring<%= " is-ending" if market.locks_at - Time.current <= 10 %>" viewBox="0 0 80 80" aria-hidden="true" data-countdown-target="ring">
+    <circle class="bet-pad__ring-track" cx="40" cy="40" r="37" />
+    <circle class="bet-pad__ring-fill" cx="40" cy="40" r="37" pathLength="100" style="stroke-dashoffset: <%= (100 * (1 - lock_progress(market))).round(2) %>" />
+  </svg>
+
+  <button type="button" class="bet-pad__button" data-bet-pad-target="button"
+          data-action="pointerdown->bet-pad#press pointermove->bet-pad#drag pointerup->bet-pad#release pointercancel->bet-pad#cancel keydown->bet-pad#key contextmenu->bet-pad#suppress"
+          aria-label="Stake <%= stake %> credits. Flick toward an outcome to bet, tap or hold to change the stake, or use the arrow keys.">
+    <span class="bet-pad__stake" data-bet-pad-target="stakeLabel"><%= stake %></span>
+    <span class="bet-pad__mode" data-bet-pad-target="modeLabel">▲ hold</span>
+  </button>
+
+  <div class="bet-pad__modes" role="group" aria-label="What tapping and holding the button do">
+    <button type="button" class="bet-pad__mode-btn" aria-pressed="false" aria-label="Tap or hold lowers the stake"
+            data-bet-pad-target="modeButton" data-action="bet-pad#setMode" data-bet-pad-mode-param="-1">−</button>
+    <button type="button" class="bet-pad__mode-btn is-on" aria-pressed="true" aria-label="Tap or hold raises the stake"
+            data-bet-pad-target="modeButton" data-action="bet-pad#setMode" data-bet-pad-mode-param="1">+</button>
+  </div>
+
+  <% if bet %>
+    <button type="button" class="bet-pad__close" data-action="bet-edit#close" aria-label="Keep my bet as it is">×</button>
+  <% end %>
+
+  <div class="bet-pad__fallback">
+    <%= label_tag dom_id(market, :stake), "Stake" %>
+    <%= number_field_tag :stake, stake, id: dom_id(market, :stake), min: Bet::MIN_STAKE, max: Bet::MAX_STAKE, step: 1,
+          inputmode: "numeric", required: true, data: { bet_pad_target: "input", action: "input->bet-pad#render" } %>
+    <%= submit_tag bet ? "Change bet" : "Place bet", class: "btn btn--primary btn--small", data: { countdown_target: "submit" } %>
+  </div>
+<% end %>

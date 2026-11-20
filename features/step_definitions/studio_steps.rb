@@ -1,5 +1,3 @@
-# Creator studio: posting, locking, settling, and cancelling markets.
-
 When("I fill in the market form with:") do |table|
   table.rows_hash.each { |field, value| fill_in field, with: value }
 end
@@ -45,12 +43,11 @@ Then("I should not be able to declare the result of {string}") do |question|
   end
 end
 
-# Checks the effect from a bettor's point of view, not the creator's.
 Then("{string} should no longer accept predictions") do |question|
   sign_in_as(find_or_create_user("latecomer"))
   visit root_path
   within(card_for(question)) do
-    expect(page).to have_content("Betting closed")
+    expect(page).to have_content("Locked")
     expect(page).to have_no_button("Place bet")
   end
 end

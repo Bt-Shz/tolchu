@@ -1,5 +1,3 @@
-# Immutable audit trail of credit movements. Positive amounts are credits to
-# the user, negative amounts are debits. Always written through Wallet.
 class LedgerEntry < ApplicationRecord
   belongs_to :user
   belongs_to :market, optional: true

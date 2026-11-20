@@ -13,6 +13,13 @@ RSpec.describe "Wallet" do
 
     before { sign_in_as fan }
 
+    it "uses the pull-up menu instead of a nav bar, and offers a top-up pill" do
+      get wallet_path
+
+      expect(response.body).not_to include(%(class="topbar"))
+      expect(response.body).to include("account-sheet__handle", %(href="/">Feed</a>), %(aria-label="Add Tolchu Points"))
+    end
+
     it "shows the balance, predictions, results, and every credit movement" do
       place_bet(user: fan, market:, outcome: "Swish", stake: 100)
       place_bet(user: create(:user), market:, outcome: "Brick", stake: 100)

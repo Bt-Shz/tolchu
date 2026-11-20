@@ -1,0 +1,30 @@
+<% visible = SessionStrip::VISIBLE %>
+<aside id="session-strip" class="session-bar" aria-label="This session">
+  <% if (strip = session_strip) %>
+    <% bets = strip.bets.reverse %>
+    <div class="session-bar__track" data-controller="session-bar" data-session-bar-size-value="<%= visible %>">
+      <% if bets.size > visible %>
+        <button type="button" class="session-bar__arrow" data-action="session-bar#previous" aria-label="Earlier bets">‹</button>
+      <% end %>
+      <ol class="session-bar__segments" aria-label="Your bets this session, oldest first">
+        <% bets.each_with_index do |bet, index| %>
+          <li data-session-bar-target="segment" <%= "hidden" if index < bets.size - visible %>>
+            <%= link_to "", root_path(focus: bet.market_id), class: "session-tile session-tile--#{bet.status}",
+                  title: "#{bet.market.question}: #{bet_status_label(bet)}",
+                  aria: { label: "#{bet.market.question}: #{bet_status_label(bet)}",
+                          current: ("true" if params[:focus].to_s == bet.market_id.to_s) } %>
+          </li>
+        <% end %>
+      </ol>
+      <% if bets.size > visible %>
+        <button type="button" class="session-bar__arrow" data-action="session-bar#next" aria-label="Later bets">›</button>
+      <% end %>
+    </div>
+    <span class="session-bar__net <%= strip.net.negative? ? "amount--down" : ("amount--up" if strip.net.positive?) %>"
+          title="Net result of your settled bets this session"
+          data-controller="sparks" data-sparks-value-value="<%= strip.net %>"><%= signed_credits(strip.net) %></span>
+  <% else %>
+    <span class="session-bar__track"></span>
+    <%= link_to "Sign in", new_session_path, class: "session-bar__net" %>
+  <% end %>
+</aside>

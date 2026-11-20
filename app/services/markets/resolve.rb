@@ -1,9 +1,5 @@
 module Markets
-  # Declares the winning outcome and settles the pool: pays winners, refunds a
-  # no-contest pool, credits the creator's share of the rake, and records the
-  # house take. Runs once; a settled market can't be resolved again.
   class Resolve < ApplicationService
-    # `now` is for tests; by default the clock is read after the market row lock is held.
     def initialize(market:, winning_outcome_id:, now: nil)
       @market = market
       @winning_outcome_id = winning_outcome_id
@@ -59,7 +55,6 @@ module Markets
         bet.outcome_id == winner.id ? :won : :lost
       end
 
-      # Taking every row lock in a fixed order prevents deadlocks between settlements running in parallel.
       def lock_users_in_id_order(bets)
         User.where(id: bets.map(&:user_id) << @market.creator_id).order(:id).lock.load
       end

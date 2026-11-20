@@ -23,7 +23,7 @@ RSpec.describe "Bets" do
       place
 
       expect(response).to redirect_to(root_path(anchor: "market_#{market.id}"))
-      expect(flash[:notice]).to eq("Prediction locked in: Lands it for 50 credits.")
+      expect(flash.keys).not_to include("bet_error")
       expect(fan.reload.balance).to eq(950)
     end
 
@@ -36,30 +36,65 @@ RSpec.describe "Bets" do
       place(stake: 500)
 
       expect(response).to redirect_to(root_path(anchor: "market_#{market.id}"))
-      expect(flash[:alert]).to eq("Stake must be less than or equal to 100")
+      expect(flash[:bet_error]).to eq("Stake must be less than or equal to 100")
+      expect(flash[:bet_error_market_id]).to eq(market.id)
       expect(fan.reload.balance).to eq(1_000)
     end
 
     it "treats a non-numeric stake as invalid" do
       place(stake: "lots")
-      expect(flash[:alert]).to eq("Stake is not a number")
+      expect(flash[:bet_error]).to eq("Stake is not a number")
     end
 
-    it "updates the card, balance, and flash in place over Turbo Streams" do
+    it "updates the card, balance, and session bar in place over Turbo Streams" do
       place(format: :turbo_stream)
 
       expect(response.media_type).to eq("text/vnd.turbo-stream.html")
       expect(response.body).to include(%(<turbo-stream action="replace" target="market_#{market.id}">))
       expect(response.body).to include(%(<turbo-stream action="update" target="wallet-balance"><template>950</template>))
-      expect(response.body).to include("You picked <strong>Lands it</strong> for 50 credits")
-      expect(response.body).to include("Prediction locked in: Lands it for 50 credits.")
+      expect(response.body).to include(%(<turbo-stream action="replace" target="session-strip">), %(class="session-tile session-tile--pending"))
+      expect(response.body).to include(%(title="Lands it">Lands it</button>))
+      expect(response.body).not_to include(%(target="flash"))
     end
 
     it "shows the error over Turbo Streams when rejected" do
       travel_to(market.locks_at + 1.second) { place(format: :turbo_stream) }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to include(%(<turbo-stream action="update" target="flash">), "Betting is closed for this market")
+      expect(response.body).to include(%(<turbo-stream action="replace" target="bet_hint_market_#{market.id}">),
+                                       "bet-pad__hint--error", "Betting is closed for this market")
+    end
+
+    describe "changing a bet before the lock" do
+      let!(:bet) { place_bet(user: fan, market:, outcome: "Lands it", stake: 50) }
+
+      def change(outcome_id: outcome(market, "Bails").id, stake: 30, bet_id: bet.id)
+        patch market_bet_path(market, bet_id), params: { outcome_id:, stake:, context: "feed" },
+                                               headers: { "Accept" => "text/vnd.turbo-stream.html, text/html" }
+      end
+
+      it "swaps the pick and stake and redraws the card" do
+        change
+
+        expect(bet.reload).to have_attributes(outcome: outcome(market, "Bails"), stake: 30)
+        expect(fan.reload.balance).to eq(970)
+        expect(response.body).to include(%(title="Bails">Bails</button>))
+      end
+
+      it "refuses once betting has closed" do
+        travel_to(market.locks_at + 1.second) { change }
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(bet.reload.stake).to eq(50)
+      end
+
+      it "can't touch someone else's bet" do
+        other = place_bet(user: create(:user), market:, outcome: "Bails", stake: 10)
+        change(bet_id: other.id)
+
+        expect(response).to have_http_status(:not_found)
+        expect(other.reload.stake).to eq(10)
+      end
     end
 
     it "returns 404 for an unknown market" do

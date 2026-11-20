@@ -1,0 +1,29 @@
+<%# locals: (market:, selectable:, picked_id: nil) %>
+<% outcomes = market.outcomes.to_a %>
+<ul class="bet-pad__sections" role="list">
+  <% outcomes.zip(pad_directions(outcomes.size)).each do |outcome, direction| %>
+    <%= tag.li class: class_names("outcome", "bet-pad__section", "bet-pad__section--#{direction}",
+                                 "outcome--winner": outcome.winner?, "outcome--picked": picked_id == outcome.id),
+               data: (selectable ? { bet_pad_target: "section", dir: direction } : {}) do %>
+      <% if selectable %>
+        <label class="outcome__hit">
+          <%= radio_button_tag :outcome_id, outcome.id, picked_id == outcome.id, id: dom_id(outcome, :pick), class: "outcome__radio visually-hidden",
+                required: true, data: { action: "change->bet-pad#render" } %>
+          <span class="outcome__label"><%= outcome.label %></span>
+        </label>
+      <% else %>
+        <span class="outcome__label"><%= outcome.label %></span>
+      <% end %>
+      <span class="outcome__stats">
+        <% if outcome.winner? %><span class="outcome__winner">Winner</span><% end %>
+        <% if market.phase == :open %>
+          <span class="outcome__odds" title="Projected payout per credit if this happens"><%= multiplier(market.projected_multiplier(outcome, stake: selectable ? Bet::DEFAULT_STAKE : 0)) %></span>
+        <% end %>
+        <span class="outcome__share"><%= percent(outcome.share_of_pool) %></span>
+      </span>
+      <% if selectable %>
+        <span class="outcome__wins">wins <%= projected_payout(market, outcome, Bet::DEFAULT_STAKE) %></span>
+      <% end %>
+    <% end %>
+  <% end %>
+</ul>

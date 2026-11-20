@@ -1,5 +1,3 @@
-# Setting up markets and checking how they appear on the feed.
-
 Given("{string} posted {string} with outcomes {string} and {string}") do |creator, question, first, second|
   post_market(creator: find_or_create_user(creator), question:, outcomes: [ first, second ])
 end
@@ -34,8 +32,21 @@ Given("{string} has been cancelled") do |question|
   raise result.error if result.failure?
 end
 
-Then("the market {string} should be marked {string}") do |question, badge|
-  within(card_for(question)) { expect(page).to have_css(".badge", exact_text: badge) }
+Then("the market {string} should be marked {string}") do |question, phase|
+  css_phase = { "Live" => "open", "Locked" => "locked", "Settled" => "resolved" }.fetch(phase)
+  expect(card_for(question)[:class].split).to include("clip-card--#{css_phase}")
+end
+
+Then("the market {string} should show {string} as the winner") do |question, outcome|
+  within(card_for(question)) { expect(page).to have_css("li.outcome--winner", text: outcome) }
+end
+
+Then("the market {string} should show my {word} bet of {credits} credits on {string}") do |question, status, stake, outcome|
+  within(card_for(question)) do
+    pill = find(".bet-pill--#{status}")
+    expect(pill).to have_css(".bet-pill__pick", exact_text: outcome)
+    expect(pill).to have_css(".bet-pill__stake", text: "#{helpers.number_with_delimiter(stake)} credits")
+  end
 end
 
 Then("the market {string} should say {string}") do |question, text|

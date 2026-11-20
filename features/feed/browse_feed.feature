@@ -28,14 +28,14 @@ Feature: Browse the clip feed
     When 2 minutes pass
     And I go to the feed
     Then the market "Will the buzzer beater go in?" should be marked "Locked"
-    And the market "Will the buzzer beater go in?" should say "Betting closed. Waiting for the result"
+    And the market "Will the buzzer beater go in?" should say "Locked"
 
   Scenario: Settled markets show the result
     Given "StuntLab" posted "Penalty: left or right?" with outcomes "Left" and "Right"
     And "Penalty: left or right?" has been settled as "Left"
     When I go to the feed
     Then the market "Penalty: left or right?" should be marked "Settled"
-    And the market "Penalty: left or right?" should say "Result: Left"
+    And the market "Penalty: left or right?" should show "Left" as the winner
 
   Scenario: Cancelled markets are hidden from the feed
     Given "StuntLab" posted "Will it rain on the parade?" with outcomes "Rain" and "Shine"

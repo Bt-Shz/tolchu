@@ -1,6 +1,3 @@
-# Placing predictions (through the UI in When steps, directly in Given steps)
-# and checking the parimutuel settlement.
-
 Given("{string} has predicted {string} with {credits} credits on {string}") do |username, outcome, stake, question|
   predict!(user: find_or_create_user(username), market: market_named(question), outcome:, stake:)
 end

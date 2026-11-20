@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_03_041300) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_19_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -27,7 +27,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_041300) do
     t.index ["outcome_id"], name: "index_bets_on_outcome_id"
     t.index ["user_id", "market_id"], name: "index_bets_on_user_id_and_market_id", unique: true
     t.check_constraint "stake > 0", name: "bets_stake_positive"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'won'::character varying, 'lost'::character varying, 'refunded'::character varying]::text[])", name: "bets_status_check"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'won'::character varying::text, 'lost'::character varying::text, 'refunded'::character varying::text])", name: "bets_status_check"
   end
 
   create_table "ledger_entries", force: :cascade do |t|
@@ -68,7 +68,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_041300) do
     t.index ["creator_id"], name: "index_markets_on_creator_id"
     t.index ["status", "locks_at"], name: "index_markets_on_status_and_locks_at"
     t.index ["winning_outcome_id"], name: "index_markets_on_winning_outcome_id"
-    t.check_constraint "status::text = ANY (ARRAY['open'::character varying, 'locked'::character varying, 'resolved'::character varying, 'cancelled'::character varying]::text[])", name: "markets_status_check"
+    t.check_constraint "status::text = ANY (ARRAY['open'::character varying::text, 'locked'::character varying::text, 'resolved'::character varying::text, 'cancelled'::character varying::text])", name: "markets_status_check"
     t.check_constraint "total_pool >= 0", name: "markets_total_pool_non_negative"
   end
 
@@ -79,7 +79,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_041300) do
     t.integer "pool", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "sealed_winner", default: false, null: false
     t.index ["market_id", "position"], name: "index_outcomes_on_market_id_and_position"
+    t.index ["market_id"], name: "index_outcomes_on_market_id_one_sealed_winner", unique: true, where: "sealed_winner"
     t.check_constraint "pool >= 0", name: "outcomes_pool_non_negative"
   end
 

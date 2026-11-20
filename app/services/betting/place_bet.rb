@@ -1,7 +1,4 @@
 module Betting
-  # Places one prediction atomically: validates it, debits the stake, and grows
-  # the outcome and market pools. The market row is locked first so a bet can't
-  # race past an early lock or a settlement.
   class PlaceBet < ApplicationService
     def initialize(user:, market:, outcome_id:, stake:)
       @user = user
@@ -23,7 +20,7 @@ module Betting
         Market.update_counters(@market.id, total_pool: bet.stake)
         bet
       end
-      @market.reload # pick up the counters incremented in SQL
+      @market.reload
       bet
     rescue ActiveRecord::RecordNotUnique
       fail!("You already made a prediction on this market")

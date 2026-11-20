@@ -66,7 +66,9 @@ Feature: Parimutuel payouts
     And "carol" has predicted "Brick" with 100 credits on "Will the free throw go in?"
     When "Will the free throw go in?" is settled as "Swish"
     And I go to the feed
-    Then the market "Will the free throw go in?" should say "You called it! Swish paid 190 credits (+90)."
+    Then the market "Will the free throw go in?" should show my won bet of 100 credits on "Swish"
+    And the market "Will the free throw go in?" should say "+90"
+    And the market "Will the free throw go in?" should say "×1.90"
     And my balance should be 1,090 credits
 
   Scenario: Seeing a losing prediction on the clip
@@ -75,4 +77,5 @@ Feature: Parimutuel payouts
     And "alice" has predicted "Swish" with 100 credits on "Will the free throw go in?"
     When "Will the free throw go in?" is settled as "Swish"
     And I go to the feed
-    Then the market "Will the free throw go in?" should say "You picked Brick and lost 100 credits."
+    Then the market "Will the free throw go in?" should show my lost bet of 100 credits on "Brick"
+    And the market "Will the free throw go in?" should say "−100"

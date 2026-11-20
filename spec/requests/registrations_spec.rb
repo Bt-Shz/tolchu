@@ -33,9 +33,9 @@ RSpec.describe "Registrations" do
       user = User.find_by!(username: "rookie")
       expect(user.balance).to eq(1_000)
       expect(response).to redirect_to(root_url)
+      expect(flash[:notice]).to start_with("Welcome to Tolchu, rookie!")
       follow_redirect!
-      expect(response.body).to include("Welcome to Tolchu, rookie!")
-      expect(response.body).to include(%(id="wallet-balance">1,000))
+      expect(response.body).to include("Net result of your settled bets this session")
     end
 
     it "re-renders the form with errors when the details are invalid" do
