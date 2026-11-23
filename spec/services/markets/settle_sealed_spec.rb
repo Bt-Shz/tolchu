@@ -78,6 +78,47 @@ RSpec.describe Markets::SettleSealed do
     end
   end
 
+  context "when a market hits a passing database clash" do
+    let!(:market) { sealed_market }
+
+    def fail_first(times, error)
+      calls = 0
+      allow(Markets::Resolve).to receive(:call).and_wrap_original do |original, **arguments|
+        calls += 1
+        raise error if calls <= times
+
+        original.call(**arguments)
+      end
+    end
+
+    it "tries again straight away and settles without logging an error" do
+      fail_first(2, ActiveRecord::Deadlocked)
+      allow(Rails.logger).to receive(:error)
+
+      travel_to(market.locks_at + 1.second) { expect(described_class.call.value).to eq(1) }
+
+      expect(market.reload).to be_resolved
+      expect(Rails.logger).not_to have_received(:error)
+    end
+
+    it "gives up after three attempts and leaves it for the next page load" do
+      fail_first(3, ActiveRecord::LockWaitTimeout)
+
+      travel_to(market.locks_at + 1.second) { expect(described_class.call.value).to eq(0) }
+
+      expect(Markets::Resolve).to have_received(:call).exactly(3).times
+      expect(market.reload).not_to be_resolved
+    end
+
+    it "does not retry an error that would only fail the same way again" do
+      fail_first(1, ActiveRecord::RecordInvalid)
+
+      travel_to(market.locks_at + 1.second) { expect(described_class.call.value).to eq(0) }
+
+      expect(Markets::Resolve).to have_received(:call).once
+    end
+  end
+
   context "when nothing is due" do
     it "runs one existence query and settles nothing" do
       sealed_market(locks_at: 1.hour.from_now)
