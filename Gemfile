@@ -51,6 +51,8 @@ group :test do
   gem "cucumber-rails", require: false
   gem "database_cleaner-active_record"
   gem "capybara"
+  # Drives headless Chrome for the @javascript scenarios (clip player, countdown, bet pad)
+  gem "selenium-webdriver"
 
   # One-liner model matchers and code coverage reports
   gem "shoulda-matchers"

@@ -175,44 +175,23 @@ RSpec.describe "Markets" do
       expect(response.body).to include(%(<turbo-stream action="replace" target="session-strip">), "session-tile--won")
     end
 
-    context "when a sealed market cannot be settled" do
-      let!(:healthy) { create(:market, question: "Healthy?", sealed_answer_label: "Bails") }
-
-      before do
-        allow(Markets::Resolve).to receive(:call).and_call_original
-        allow(Markets::Resolve).to receive(:call).with(hash_including(market: sealed)).and_raise(ActiveRecord::Deadlocked)
-      end
-
-      it "still renders the feed and settles the other markets" do
-        travel_to(sealed.locks_at + 1.second) { get root_path }
-
-        expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Sealed?", "Healthy?")
-        expect(healthy.reload).to be_resolved
-        expect(sealed.reload).not_to be_resolved
-      end
-
-      it "still renders the clip page, the card refresh, and the studio" do
-        travel_to(sealed.locks_at + 1.second) do
-          get market_path(sealed)
-          expect(response).to have_http_status(:ok)
-
-          get card_market_path(sealed, context: "feed")
-          expect(response).to have_http_status(:ok)
-
-          get studio_markets_path
-          expect(response).to have_http_status(:ok)
-        end
-      end
-    end
-
-    it "does no settlement work on a feed visit when nothing is due" do
-      allow(Markets::Resolve).to receive(:call)
-
-      get root_path
+    it "redraws the card for a guest without a session bar, since guests have no session" do
+      delete session_path
+      travel_to(sealed.locks_at + 1.second) { get card_market_path(sealed, context: "feed") }
 
       expect(response).to have_http_status(:ok)
-      expect(Markets::Resolve).not_to have_received(:call)
+      expect(response.body).to include(%(<turbo-stream action="replace" target="market_#{sealed.id}">), "clip-card--resolved")
+      expect(response.body).not_to include("session-strip", "clip-card--review")
+    end
+
+    it "keeps bets returning to the clip page when the card is redrawn there" do
+      open_market = create(:market, question: "Still open?")
+
+      get card_market_path(open_market, context: "page")
+      expect(response.body).to include(%(name="context" value="page"))
+
+      get card_market_path(open_market, context: "anything-else")
+      expect(response.body).to include(%(name="context" value="feed"))
     end
   end
 

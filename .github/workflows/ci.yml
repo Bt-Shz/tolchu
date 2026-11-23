@@ -102,6 +102,9 @@ jobs:
       - name: Run Cucumber user stories
         run: bundle exec cucumber --format progress
 
+      - name: Enforce 90% merged line coverage
+        run: bin/coverage-check
+
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4

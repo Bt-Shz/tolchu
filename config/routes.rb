@@ -25,6 +25,9 @@ Rails.application.routes.draw do
 
   get "how-it-works", to: "pages#how_it_works", as: :how_it_works
 
+  # Browser scenarios need a clip a real browser can play; the range support lets it seek.
+  mount Rack::Files.new(Rails.root.join("spec/fixtures/files").to_s), at: "/test-clips" if Rails.env.test?
+
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Used by Heroku/uptime monitors and the post-deploy smoke check.
   get "up" => "rails/health#show", as: :rails_health_check
