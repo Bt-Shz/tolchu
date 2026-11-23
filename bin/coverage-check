@@ -3,8 +3,8 @@
 # Run both suites first: it reads the merged report they leave in coverage/coverage.json.
 require "json"
 
-path = File.expand_path("../coverage/coverage.json", __dir__)
-abort "No coverage report at coverage/coverage.json; run RSpec and Cucumber first" unless File.exist?(path)
+path = ENV.fetch("COVERAGE_REPORT") { File.expand_path("../coverage/coverage.json", __dir__) }
+abort "No coverage report at #{path}; run RSpec and Cucumber first" unless File.exist?(path)
 
 report = JSON.parse(File.read(path))
 suites = report.dig("meta", "command_names").to_a
