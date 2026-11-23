@@ -174,6 +174,25 @@ RSpec.describe "Markets" do
       expect(response.body).to include(%(<turbo-stream action="replace" target="market_#{sealed.id}">), "clip-card--won")
       expect(response.body).to include(%(<turbo-stream action="replace" target="session-strip">), "session-tile--won")
     end
+
+    it "redraws the card for a guest without a session bar, since guests have no session" do
+      delete session_path
+      travel_to(sealed.locks_at + 1.second) { get card_market_path(sealed, context: "feed") }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(%(<turbo-stream action="replace" target="market_#{sealed.id}">), "clip-card--resolved")
+      expect(response.body).not_to include("session-strip", "clip-card--review")
+    end
+
+    it "keeps bets returning to the clip page when the card is redrawn there" do
+      open_market = create(:market, question: "Still open?")
+
+      get card_market_path(open_market, context: "page")
+      expect(response.body).to include(%(name="context" value="page"))
+
+      get card_market_path(open_market, context: "anything-else")
+      expect(response.body).to include(%(name="context" value="feed"))
+    end
   end
 
   describe "the session bar" do
