@@ -16,7 +16,7 @@ module Markets
 
         bets = @market.bets.includes(:user).order(:id).to_a
         settlement = settle(bets, winner)
-        @market.update!(
+        @market.transition!(
           status: :resolved,
           winning_outcome: winner,
           locked_at: @market.locked_at || @market.locks_at,
@@ -40,7 +40,7 @@ module Markets
 
         bets.each do |bet|
           payout = settlement.payout_for(bet.id)
-          bet.update!(payout:, status: bet_status(bet, winner, settlement))
+          bet.settle!(payout:, status: bet_status(bet, winner, settlement))
           next if payout.zero?
 
           bet.user.wallet.credit!(payout, kind: settlement.refunded? ? :refund : :payout, market: @market, bet:)

@@ -109,4 +109,24 @@ RSpec.describe Markets::Resolve do
 
     expect(resolve("Swish").error).to eq("This market has already been settled")
   end
+
+  context "when the market or a bet no longer passes the publishing rules" do
+    before do
+      place_bet(user: alice, market:, outcome: "Swish", stake: 100)
+      place_bet(user: carol, market:, outcome: "Brick", stake: 100)
+      Markets::Lock.call(market:)
+      market.update_columns(video_url: "ftp://old-host/clip.mp4", question: "Q" * 200)
+      carol.bets.sole.update_columns(stake: Bet::MAX_STAKE + 50)
+    end
+
+    it "still settles and pays out, because those rules are about publishing, not paying" do
+      expect(market.reload).not_to be_valid
+
+      expect(resolve("Swish")).to be_success
+      expect(market.reload).to be_resolved
+      expect(alice.bets.sole).to be_won
+      expect(carol.bets.sole).to be_lost
+      expect(alice.reload.balance).to be > 1_000
+    end
+  end
 end
