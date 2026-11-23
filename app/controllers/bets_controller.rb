@@ -1,5 +1,6 @@
 class BetsController < ApplicationController
   before_action :set_market
+  rate_limit to: 20, within: 1.minute, only: :create, by: -> { Current.user.id }, with: :too_many_bets
 
   def create
     respond_to_bet Betting::PlaceBet.call(user: Current.user, market: @market, outcome_id: params[:outcome_id], stake: stake_param)
@@ -26,6 +27,17 @@ class BetsController < ApplicationController
           end
           format.html { redirect_to return_path, flash: { bet_error: result.error, bet_error_market_id: @market.id } }
         end
+      end
+    end
+
+    def too_many_bets
+      message = "You're placing bets too fast. Wait a minute and try again."
+      respond_to do |format|
+        format.turbo_stream do
+          flash.now[:alert] = message
+          render turbo_stream: turbo_stream.update("flash", partial: "layouts/flash"), status: :too_many_requests
+        end
+        format.html { redirect_to return_path, alert: message }
       end
     end
 

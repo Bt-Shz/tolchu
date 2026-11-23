@@ -102,4 +102,53 @@ RSpec.describe "Bets" do
       expect(response).to have_http_status(:not_found)
     end
   end
+
+  context "rate limiting" do
+    let(:limiter_store) { ActiveSupport::Cache::MemoryStore.new }
+    let(:too_fast) { "You're placing bets too fast. Wait a minute and try again." }
+
+    # The test cache is a null store, so counters never add up; send them to a real one.
+    before do
+      allow(Rails.cache).to receive(:increment) { |*args, **options| limiter_store.increment(*args, **options) }
+      sign_in_as fan
+      20.times { place }
+    end
+
+    it "redirects the 21st bet in a minute back with an alert and doesn't run it" do
+      expect(Betting::PlaceBet).not_to receive(:call)
+
+      place
+
+      expect(response).to redirect_to(root_path(anchor: "market_#{market.id}"))
+      expect(flash[:alert]).to eq(too_fast)
+    end
+
+    it "answers a Turbo request with 429 and the message in the flash area" do
+      expect(Betting::PlaceBet).not_to receive(:call)
+
+      place(format: :turbo_stream)
+
+      expect(response).to have_http_status(:too_many_requests)
+      expect(response.body).to include('target="flash"').and include("placing bets too fast")
+    end
+
+    it "doesn't slow down another user" do
+      delete session_path
+      other = create(:user)
+      sign_in_as other
+
+      place
+
+      expect(flash[:alert]).to be_nil
+      expect(other.bets.count).to eq(1)
+    end
+
+    it "lets the same user bet again after the minute passes" do
+      other_market = create(:market)
+      travel 61.seconds
+
+      expect { post market_bets_path(other_market), params: { outcome_id: other_market.outcomes.first.id, stake: 10 } }
+        .to change { fan.bets.count }.by(1)
+    end
+  end
 end
