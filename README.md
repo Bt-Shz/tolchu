@@ -110,6 +110,9 @@ open coverage/index.html # merged coverage from both suites
 bin/ci                   # everything CI runs: RuboCop, Brakeman, bundler-audit, importmap audit, RSpec, Cucumber
 ```
 
+CI fails when merged line coverage drops below 90%. `bin/coverage-check` runs the same check locally after both
+suites; set `MIN_LINE_COVERAGE` to try another threshold.
+
 Coverage: **97.8% of lines and 90.2% of branches** (RSpec and Cucumber combined).
 
 ### User stories (Cucumber)
