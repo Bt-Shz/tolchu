@@ -121,6 +121,7 @@ Coverage: **97.8% of lines and 90.2% of branches** (RSpec and Cucumber combined)
 |---|---|
 | `features/accounts/sign_up.feature` | Sign up and get 1,000 starting credits, with validation for duplicates and weak passwords |
 | `features/accounts/sign_in.feature` | Sign in/out, wrong password, protected pages redirect and return |
+| `features/feed/clip_player.feature` | In a real browser: the clip freezes before the action, betting closes at zero, the stake estimate updates, flick and keyboard bets land in place |
 | `features/feed/browse_feed.feature` | Scroll clips with question, outcomes, and pool split. Ordering, locked and settled states, guests |
 | `features/betting/place_bet.feature` | Placing a prediction, stake cap, insufficient credits, one bet per market, hard lock, no self-betting |
 | `features/betting/payouts.feature` | Pro-rata payouts, fee cap, no-contest refunds, creator reward scaled by contest score |

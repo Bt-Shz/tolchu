@@ -14,6 +14,10 @@ Given("{string} locks in {int} minute(s)") do |question, minutes|
   market_named(question).update_columns(locks_at: minutes.minutes.from_now)
 end
 
+Given("{string} locks in {int} second(s)") do |question, seconds|
+  market_named(question).update_columns(locks_at: seconds.seconds.from_now)
+end
+
 Given("I have locked betting on {string}") do |question|
   result = Markets::Lock.call(market: market_named(question))
   raise result.error if result.failure?

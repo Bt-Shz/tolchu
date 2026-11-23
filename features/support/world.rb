@@ -12,6 +12,9 @@ module TolchuWorld
     fill_in "Email", with: user.email_address
     fill_in "Password", with: DEFAULT_PASSWORD
     click_button "Sign in"
+    # Wait until sign-in has landed on the feed: in a real browser the next visit could
+    # otherwise race the sign-in request and load before the session cookie is set.
+    expect(page).to have_current_path(root_path)
     expect(page).to have_no_link("Sign in", exact: true)
     @current_user = user
   end
