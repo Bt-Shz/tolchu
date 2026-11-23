@@ -73,7 +73,7 @@ Demo accounts (password for all: `password123`):
 
 ## Running locally
 
-**Prerequisites:** Ruby 3.4.5 (see `.ruby-version`; `rbenv install 3.4.5`), PostgreSQL 14+, Bundler.
+**Prerequisites:** Ruby 3.4.13 (see `.ruby-version`; `rbenv install 3.4.13`), PostgreSQL 14+, Bundler.
 
 No local Postgres? Run it in Docker and point Rails at it:
 
