@@ -73,7 +73,7 @@ Demo accounts (password for all: `password123`):
 
 ## Running locally
 
-**Prerequisites:** Ruby 3.4.5 (see `.ruby-version`; `rbenv install 3.4.5`), PostgreSQL 14+, Bundler.
+**Prerequisites:** Ruby 3.4.13 (see `.ruby-version`; `rbenv install 3.4.13`), PostgreSQL 14+, Bundler.
 
 No local Postgres? Run it in Docker and point Rails at it:
 
@@ -110,9 +110,8 @@ open coverage/index.html # merged coverage from both suites
 bin/ci                   # everything CI runs: RuboCop, Brakeman, bundler-audit, importmap audit, RSpec, Cucumber
 ```
 
-Scenarios tagged `@javascript` (`features/feed/clip_player.feature`) run in headless Google Chrome, so they need
-Chrome installed. They cover what only a real browser can: the clip freezing, the countdown closing betting, the
-live payout estimate, and betting by flick or keyboard without a page load. The rest run without a browser.
+CI fails when merged line coverage drops below 90%. `bin/coverage-check` runs the same check locally after both
+suites; set `MIN_LINE_COVERAGE` to try another threshold.
 
 Coverage: **97.8% of lines and 90.2% of branches** (RSpec and Cucumber combined).
 
