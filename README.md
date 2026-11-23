@@ -110,6 +110,10 @@ open coverage/index.html # merged coverage from both suites
 bin/ci                   # everything CI runs: RuboCop, Brakeman, bundler-audit, importmap audit, RSpec, Cucumber
 ```
 
+Scenarios tagged `@javascript` (`features/feed/clip_player.feature`) run in headless Google Chrome, so they need
+Chrome installed. They cover what only a real browser can: the clip freezing, the countdown closing betting, the
+live payout estimate, and betting by flick or keyboard without a page load. The rest run without a browser.
+
 Coverage: **97.8% of lines and 90.2% of branches** (RSpec and Cucumber combined).
 
 ### User stories (Cucumber)
@@ -118,6 +122,7 @@ Coverage: **97.8% of lines and 90.2% of branches** (RSpec and Cucumber combined)
 |---|---|
 | `features/accounts/sign_up.feature` | Sign up and get 1,000 starting credits, with validation for duplicates and weak passwords |
 | `features/accounts/sign_in.feature` | Sign in/out, wrong password, protected pages redirect and return |
+| `features/feed/clip_player.feature` | In a real browser: the clip freezes before the action, betting closes at zero, the stake estimate updates, flick and keyboard bets land in place |
 | `features/feed/browse_feed.feature` | Scroll clips with question, outcomes, and pool split. Ordering, locked and settled states, guests |
 | `features/betting/place_bet.feature` | Placing a prediction, stake cap, insufficient credits, one bet per market, hard lock, no self-betting |
 | `features/betting/payouts.feature` | Pro-rata payouts, fee cap, no-contest refunds, creator reward scaled by contest score |
